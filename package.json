@@ -4,12 +4,12 @@
   "description": "Postyup political poster generator backend API",
   "main": "dist/main.js",
   "scripts": {
-    "build": "cd backend && npm install && npm run build",
-    "start": "cd backend && npm start",
-    "start:dev": "cd backend && npm run start:dev",
-    "db:generate": "cd backend && npm run db:generate",
-    "db:migrate": "cd backend && npm run db:migrate",
-    "db:push": "cd backend && npm run db:push",
+    "build": "npm install && npm run build",
+    "start": "npm start",
+    "start:dev": "npm run start:dev",
+    "db:generate": "npm run db:generate",
+    "db:migrate": "npm run db:migrate",
+    "db:push": "npm run db:push",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["political", "poster", "generator", "campaign", "backend"],
