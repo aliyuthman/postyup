@@ -1,24 +1,21 @@
 {
-  "name": "postyup",
+  "name": "postyup-backend",
   "version": "1.0.0",
-  "description": "Political poster generator application",
+  "description": "Postyup political poster generator backend API",
+  "main": "dist/main.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run start:dev",
-    "build": "npm run build:frontend && npm run build:backend",
-    "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "deploy:frontend": "cd frontend && vercel --prod",
-    "deploy:backend": "cd backend && railway up",
-    "setup": "npm run setup:frontend && npm run setup:backend",
-    "setup:frontend": "cd frontend && npm install",
-    "setup:backend": "cd backend && npm install"
+    "build": "cd backend && npm install && npm run build",
+    "start": "cd backend && npm start",
+    "start:dev": "cd backend && npm run start:dev",
+    "db:generate": "cd backend && npm run db:generate",
+    "db:migrate": "cd backend && npm run db:migrate",
+    "db:push": "cd backend && npm run db:push",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
-  "keywords": ["political", "poster", "generator", "campaign"],
+  "keywords": ["political", "poster", "generator", "campaign", "backend"],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
