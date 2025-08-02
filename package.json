@@ -1,0 +1,24 @@
+{
+  "name": "postyup",
+  "version": "1.0.0",
+  "description": "Political poster generator application",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run start:dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "deploy:frontend": "cd frontend && vercel --prod",
+    "deploy:backend": "cd backend && railway up",
+    "setup": "npm run setup:frontend && npm run setup:backend",
+    "setup:frontend": "cd frontend && npm install",
+    "setup:backend": "cd backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["political", "poster", "generator", "campaign"],
+  "author": "Your Name",
+  "license": "MIT"
+}
