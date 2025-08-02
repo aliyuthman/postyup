@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useTemplateStore, Template } from '@/stores/templateStore';
 
 interface TemplateGalleryProps {
@@ -9,7 +8,6 @@ interface TemplateGalleryProps {
 
 export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryProps) {
   const {
-    templates,
     selectedTemplate,
     categories,
     selectedCategory,

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useSupporterStore } from '@/stores/supporterStore';
-import { useTemplateStore } from '@/stores/templateStore';
+import { useTemplateStore, Template } from '@/stores/templateStore';
 import { usePosterStore } from '@/stores/posterStore';
 import PhotoUpload from '@/components/PhotoUpload';
 import PhotoCropper from '@/components/PhotoCropper';
@@ -19,6 +19,27 @@ export default function Home() {
 
   const [showCropper, setShowCropper] = useState(false);
 
+  const loadTemplates = useCallback(async () => {
+    setLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/api/templates`);
+      
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setTemplates(data.templates || []);
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+      // Set some mock templates for testing
+      setTemplates([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [setTemplates, setLoading]);
+
   useEffect(() => {
     // Generate session ID on mount
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -26,20 +47,7 @@ export default function Home() {
 
     // Load templates
     loadTemplates();
-  }, []);
-
-  const loadTemplates = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/templates');
-      const data = await response.json();
-      setTemplates(data.templates || []);
-    } catch (error) {
-      console.error('Failed to load templates:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [setSessionId, loadTemplates]);
 
   const handlePhotoSelected = (file: File) => {
     const url = URL.createObjectURL(file);
@@ -52,7 +60,7 @@ export default function Home() {
     nextStep();
   };
 
-  const handleTemplateSelect = (template: any) => {
+  const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template);
     nextStep();
   };
@@ -60,8 +68,9 @@ export default function Home() {
   const handleGeneratePoster = async () => {
     setGenerationStatus('generating');
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       // Generate final poster through API
-      const response = await fetch('/api/poster/generate', {
+      const response = await fetch(`${apiUrl}/api/poster/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -71,6 +80,10 @@ export default function Home() {
           sessionId: useSessionStore.getState().sessionId,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
 
       const data = await response.json();
       setFinalPosterUrl(data.finalUrl);
@@ -110,7 +123,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center space-x-4">
             {['Details', 'Photo', 'Template', 'Preview', 'Complete'].map((step, index) => {
-              const stepNames: any = ['details', 'photo', 'template', 'preview', 'complete'];
+              const stepNames: string[] = ['details', 'photo', 'template', 'preview', 'complete'];
               const isActive = stepNames[index] === currentStep;
               const isCompleted = stepNames.indexOf(currentStep) > index;
               

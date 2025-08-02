@@ -27,7 +27,7 @@ export interface SupporterState {
   setName: (name: string) => void;
   setTitle: (title: string) => void;
   setPhoto: (photo: PhotoData) => void;
-  setCropData: (cropData: CropData, croppedAreaPixels: any) => void;
+  setCropData: (cropData: CropData, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => void;
   reset: () => void;
 }
 

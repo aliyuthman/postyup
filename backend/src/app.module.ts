@@ -4,6 +4,7 @@ import { PhotoModule } from './photo/photo.module';
 import { TemplateModule } from './template/template.module';
 import { PosterModule } from './poster/poster.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
@@ -15,5 +16,6 @@ import { AnalyticsModule } from './analytics/analytics.module';
     PosterModule,
     AnalyticsModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

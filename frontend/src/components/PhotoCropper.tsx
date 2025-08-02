@@ -28,7 +28,7 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
   }, []);
 
   const onCropCompleteHandler = useCallback(
-    (croppedArea: any, croppedAreaPixels: any) => {
+    (croppedArea: { x: number; y: number; width: number; height: number }, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => {
       setCropData(
         {
           x: crop.x,
