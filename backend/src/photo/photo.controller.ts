@@ -8,22 +8,26 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { PhotoService } from './photo.service';
 import { ApiConsumes, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UploadPhotoDto, CropPhotoDto } from '../dto/photo.dto';
 
 @Controller('api/photo')
 export class PhotoController {
   constructor(private readonly photoService: PhotoService) {}
 
   @Post('upload')
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 uploads per minute
   @ApiOperation({ summary: 'Upload user photo' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: 'Photo uploaded successfully' })
   @UseInterceptors(FileInterceptor('photo'))
   async uploadPhoto(
     @UploadedFile() file: Express.Multer.File,
-    @Body('sessionId') sessionId: string
+    @Body() body: UploadPhotoDto
   ) {
+    const { sessionId } = body;
     if (!file) {
       throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
     }
@@ -56,14 +60,7 @@ export class PhotoController {
   @Post('crop')
   @ApiOperation({ summary: 'Crop uploaded photo' })
   @ApiResponse({ status: 200, description: 'Photo cropped successfully' })
-  async cropPhoto(
-    @Body()
-    cropData: {
-      photoUrl: string;
-      cropParams: { x: number; y: number; width: number; height: number };
-      sessionId: string;
-    }
-  ) {
+  async cropPhoto(@Body() cropData: CropPhotoDto) {
     const { photoUrl, cropParams, sessionId } = cropData;
 
     if (!photoUrl || !cropParams || !sessionId) {

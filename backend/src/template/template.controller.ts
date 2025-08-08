@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, Post, Put, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { TemplateService } from './template.service';
 import { ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
@@ -54,6 +54,28 @@ export class TemplateController {
       }
       throw new HttpException(
         'Failed to fetch template',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update template by ID' })
+  @ApiParam({ name: 'id', description: 'Template ID' })
+  @ApiResponse({ status: 200, description: 'Template updated successfully' })
+  async updateTemplate(@Param('id') id: string, @Body() updateData: any) {
+    try {
+      const template = await this.templateService.updateTemplate(id, updateData);
+      if (!template) {
+        throw new HttpException('Template not found', HttpStatus.NOT_FOUND);
+      }
+      return { template };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to update template',
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }

@@ -28,15 +28,25 @@ export class TemplateService {
     return result[0];
   }
 
+  async updateTemplate(id: string, templateData: {
+    name?: string;
+    category?: string;
+    imageUrls?: { thumbnail: string; preview: string; full: string };
+    layoutConfig?: any;
+  }): Promise<Template | null> {
+    const result = await db.update(templates).set(templateData).where(eq(templates.id, id)).returning();
+    return result[0] || null;
+  }
+
   async seedSampleTemplates(): Promise<void> {
     const sampleTemplates = [
       {
         name: 'Classic Endorsement',
         category: 'Endorsement',
         imageUrls: {
-          thumbnail: '/templates/classic-endorsement-thumb.png',
-          preview: '/templates/classic-endorsement-preview.png',
-          full: '/templates/classic-endorsement-full.png',
+          thumbnail: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/classic-endorsement-thumb.png',
+          preview: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/classic-endorsement-preview.png',
+          full: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/classic-endorsement-full.png',
         },
         layoutConfig: {
           textZones: [
@@ -253,7 +263,15 @@ export class TemplateService {
     ];
 
     for (const template of sampleTemplates) {
-      await db.insert(templates).values(template).onConflictDoNothing();
+      // Try to update existing template first
+      const existingTemplate = await db.select().from(templates).where(eq(templates.name, template.name));
+      if (existingTemplate.length > 0) {
+        // Update existing template
+        await db.update(templates).set(template).where(eq(templates.name, template.name));
+      } else {
+        // Insert new template
+        await db.insert(templates).values(template);
+      }
     }
   }
 }
