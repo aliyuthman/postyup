@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { TemplateService } from '../template/template.service';
 import * as sharp from 'sharp';
-import { createCanvas, loadImage, registerFont } from 'canvas';
+import puppeteer from 'puppeteer';
 
 @Injectable()
 export class PosterService {
@@ -140,7 +140,7 @@ export class PosterService {
         });
       }
 
-      // Add text overlays using Canvas API for proper text rendering
+      // Add text overlays using Puppeteer for guaranteed text rendering
       if (template.layoutConfig.textZones?.length > 0) {
         console.log(`Processing ${template.layoutConfig.textZones.length} text zones`);
         
@@ -163,43 +163,59 @@ export class PosterService {
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
           try {
-            // Create canvas for text rendering
-            const textHeight = Math.round(fontSize * 1.5);
-            const canvas = createCanvas(textWidth, textHeight);
-            const ctx = canvas.getContext('2d');
-
-            // Set font properties
+            // Create HTML for text rendering
             const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
-            ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
-            ctx.fillStyle = textZone.color;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
+            const textHeight = Math.round(fontSize * 1.5);
+            
+            const html = `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <style>
+                    body {
+                      margin: 0;
+                      padding: 0;
+                      font-family: Arial, sans-serif;
+                      background: transparent;
+                    }
+                    .text-container {
+                      width: ${textWidth}px;
+                      height: ${textHeight}px;
+                      font-size: ${fontSize}px;
+                      font-weight: ${fontWeight};
+                      color: ${textZone.color};
+                      line-height: 1.2;
+                      word-wrap: break-word;
+                      overflow-wrap: break-word;
+                      padding: 0;
+                      margin: 0;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="text-container">${textContent}</div>
+                </body>
+              </html>
+            `;
 
-            // Enable text antialiasing for better quality
-            ctx.imageSmoothingEnabled = true;
+            // Launch headless browser
+            const browser = await puppeteer.launch({
+              headless: 'shell',
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            
+            const page = await browser.newPage();
+            await page.setContent(html);
+            await page.setViewport({ width: textWidth, height: textHeight });
 
-            // Draw text with proper wrapping
-            const words = textContent.split(' ');
-            let line = '';
-            let y = 0;
-            const lineHeight = fontSize * 1.2;
+            // Take screenshot of text
+            const textImageBuffer = await page.screenshot({
+              type: 'png',
+              clip: { x: 0, y: 0, width: textWidth, height: textHeight },
+              omitBackground: true
+            });
 
-            for (let i = 0; i < words.length; i++) {
-              const testLine = line + words[i] + ' ';
-              const metrics = ctx.measureText(testLine);
-              
-              if (metrics.width > textWidth && i > 0) {
-                ctx.fillText(line, 0, y);
-                line = words[i] + ' ';
-                y += lineHeight;
-              } else {
-                line = testLine;
-              }
-            }
-            ctx.fillText(line, 0, y);
-
-            // Convert canvas to buffer
-            const textImageBuffer = canvas.toBuffer('image/png');
+            await browser.close();
 
             overlays.push({
               input: textImageBuffer,
@@ -207,9 +223,9 @@ export class PosterService {
               left: textX,
             });
             
-            console.log(`Added Canvas text overlay at position ${textX}, ${textY}`);
+            console.log(`Added Puppeteer text overlay at position ${textX}, ${textY}`);
           } catch (textError) {
-            console.error('Error creating Canvas text overlay:', textError);
+            console.error('Error creating Puppeteer text overlay:', textError);
             
             // Fallback: create a colored rectangle to show positioning works
             const fallbackRect = await sharp({
