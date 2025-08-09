@@ -33,6 +33,7 @@
     "dotenv": "^17.2.1",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.4",
+    "fabric": "^6.7.1",
     "multer": "^2.0.2",
     "postgres": "^3.4.7",
     "puppeteer": "^24.16.0",

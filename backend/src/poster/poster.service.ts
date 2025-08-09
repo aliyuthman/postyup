@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { TemplateService } from '../template/template.service';
 import * as sharp from 'sharp';
-import puppeteer from 'puppeteer';
+import { Canvas, Text } from 'fabric';
+import { createCanvas } from 'canvas';
 
 @Injectable()
 export class PosterService {
@@ -140,9 +141,9 @@ export class PosterService {
         });
       }
 
-      // Add text overlays using Puppeteer for guaranteed text rendering
+      // Add text overlays using Fabric.js for professional text rendering
       if (template.layoutConfig.textZones?.length > 0) {
-        console.log(`Processing ${template.layoutConfig.textZones.length} text zones`);
+        console.log(`Processing ${template.layoutConfig.textZones.length} text zones with Fabric.js`);
         
         for (const textZone of template.layoutConfig.textZones) {
           let textContent = textZone.type === 'name' ? supporterData.name : supporterData.title;
@@ -158,76 +159,40 @@ export class PosterService {
           const textX = Math.round((textZone.x / 1080) * size);
           const textY = Math.round((textZone.y / 1080) * size);
           const textWidth = Math.round((textZone.width / 1080) * size);
+          const textHeight = Math.round((textZone.height / 1080) * size);
           const fontSize = Math.round((textZone.fontSize / 1080) * size);
           
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
           try {
-            // Create HTML for text rendering  
-            // Map font weights to Inter's available weights
-            const fontWeight = textZone.fontWeight === 'bold' ? '700' : '400';
-            const textHeight = Math.round(fontSize * 1.5);
-            
-            const html = `
-              <!DOCTYPE html>
-              <html>
-                <head>
-                  <link rel="preconnect" href="https://fonts.googleapis.com">
-                  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-                  <style>
-                    body {
-                      margin: 0;
-                      padding: 0;
-                      font-family: 'Inter', Arial, sans-serif;
-                      background: transparent;
-                    }
-                    .text-container {
-                      width: ${textWidth}px;
-                      height: ${textHeight}px;
-                      font-size: ${fontSize}px;
-                      font-weight: ${fontWeight};
-                      color: ${textZone.color};
-                      line-height: 1.1;
-                      word-wrap: break-word;
-                      overflow-wrap: break-word;
-                      hyphens: auto;
-                      padding: 0;
-                      margin: 0;
-                      display: flex;
-                      align-items: flex-start;
-                      text-align: left;
-                    }
-                  </style>
-                </head>
-                <body>
-                  <div class="text-container">${textContent}</div>
-                </body>
-              </html>
-            `;
+            // Create fabric canvas for text rendering
+            const nodeCanvas = createCanvas(textWidth, textHeight);
+            const fabricCanvas = new Canvas(nodeCanvas as any);
 
-            // Launch headless browser
-            const browser = await puppeteer.launch({
-              headless: 'shell',
-              args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
-            
-            const page = await browser.newPage();
-            await page.setContent(html);
-            await page.setViewport({ width: textWidth, height: textHeight });
-            
-            // Wait for fonts to load
-            await page.evaluate(() => document.fonts.ready);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Give fonts time to load
-
-            // Take screenshot of text
-            const textImageBuffer = await page.screenshot({
-              type: 'png',
-              clip: { x: 0, y: 0, width: textWidth, height: textHeight },
-              omitBackground: true
+            // Create fabric text object
+            const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
+            const fabricText = new Text(textContent, {
+              left: 0,
+              top: 0,
+              fontFamily: 'Inter, Arial, sans-serif',
+              fontSize: fontSize,
+              fontWeight: fontWeight,
+              fill: textZone.color,
+              textAlign: textZone.textAlign || 'left',
+              width: textWidth,
+              splitByGrapheme: true, // Better text wrapping
+              lineHeight: 1.1
             });
 
-            await browser.close();
+            // Add text to canvas
+            fabricCanvas.add(fabricText);
+            
+            // Render and get buffer
+            fabricCanvas.renderAll();
+            const textImageBuffer = nodeCanvas.toBuffer('image/png');
+
+            // Dispose fabric canvas
+            fabricCanvas.dispose();
 
             overlays.push({
               input: textImageBuffer,
@@ -235,17 +200,17 @@ export class PosterService {
               left: textX,
             });
             
-            console.log(`Added Puppeteer text overlay at position ${textX}, ${textY}`);
+            console.log(`Added Fabric.js text overlay at position ${textX}, ${textY}`);
           } catch (textError) {
-            console.error('Error creating Puppeteer text overlay:', textError);
+            console.error('Error creating Fabric.js text overlay:', textError);
             
             // Fallback: create a colored rectangle to show positioning works
             const fallbackRect = await sharp({
               create: {
                 width: textWidth,
-                height: Math.round(fontSize * 1.5),
+                height: textHeight,
                 channels: 4,
-                background: { r: 255, g: 255, b: 0, alpha: 0.8 } // Yellow rectangle as fallback
+                background: { r: 0, g: 255, b: 0, alpha: 0.8 } // Green rectangle as fallback
               }
             }).png().toBuffer();
 
