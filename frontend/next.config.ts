@@ -10,13 +10,19 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'postyup.up.railway.app'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '*.supabase.co',
         port: '',
         pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.railway.app',
+        port: '',
+        pathname: '/**',
       },
     ],
   },
