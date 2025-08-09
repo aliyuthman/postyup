@@ -59,8 +59,10 @@ export class TemplateService {
               height: 78.43,
               fontSize: 18,
               fontFamily: 'Inter',
+              fontWeight: 'bold',
               color: '#000000',
               textAlign: 'left',
+              textTransform: 'uppercase',
             },
             {
               type: 'title',

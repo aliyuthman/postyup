@@ -93,14 +93,21 @@ export default function PosterPreview({
 
       // Draw text overlays
       selectedTemplate.layoutConfig.textZones.forEach((textZone) => {
-        const textContent = textZone.type === 'name' ? name : title;
+        let textContent = textZone.type === 'name' ? name : title;
         if (!textContent) return;
+
+        // Apply text transformations
+        if ((textZone as any).textTransform === 'uppercase') {
+          textContent = textContent.toUpperCase();
+        }
 
         const textX = (textZone.x / 1080) * width;
         const textY = (textZone.y / 1080) * height;
         const fontSize = (textZone.fontSize / 1080) * width;
 
-        ctx.font = `${fontSize}px ${textZone.fontFamily}`;
+        // Build font string with weight
+        const fontWeight = (textZone as any).fontWeight || 'normal';
+        ctx.font = `${fontWeight} ${fontSize}px ${textZone.fontFamily}`;
         ctx.fillStyle = textZone.color;
         ctx.textAlign = textZone.textAlign as CanvasTextAlign;
 
