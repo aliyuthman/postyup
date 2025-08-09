@@ -15,7 +15,7 @@ export default function Home() {
   const { currentStep, nextStep, previousStep, setSessionId } = useSessionStore();
   const { name, title, photo, setName, setTitle, setPhoto } = useSupporterStore();
   const { setSelectedTemplate, setTemplates, setLoading } = useTemplateStore();
-  const { setFinalPosterUrl, setGenerationStatus } = usePosterStore();
+  const { setFinalPosterUrl, setGenerationStatus, generationStatus } = usePosterStore();
 
   const [showCropper, setShowCropper] = useState(false);
 
@@ -43,18 +43,35 @@ export default function Home() {
   }, [setTemplates, setLoading]);
 
   useEffect(() => {
-    // Generate UUID for session ID
-    const generateUUID = () => {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
-    };
+    // Clear all stores on fresh page load (but preserve on navigation)
+    const hasJustRefreshed = !sessionStorage.getItem('app-initialized');
     
-    const sessionId = generateUUID();
-    console.log('Generated session ID:', sessionId);
-    setSessionId(sessionId);
+    if (hasJustRefreshed) {
+      // Clear all stores on page refresh
+      useSessionStore.getState().reset();
+      useSupporterStore.getState().reset();
+      useTemplateStore.getState().setSelectedTemplate(null);
+      usePosterStore.getState().setFinalPosterUrl('');
+      usePosterStore.getState().setGenerationStatus('idle');
+      
+      // Mark app as initialized
+      sessionStorage.setItem('app-initialized', 'true');
+    }
+
+    // Generate UUID for session ID if not exists
+    if (!useSessionStore.getState().sessionId) {
+      const generateUUID = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c == 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      };
+      
+      const sessionId = generateUUID();
+      console.log('Generated session ID:', sessionId);
+      setSessionId(sessionId);
+    }
 
     // Load templates
     loadTemplates();
@@ -79,6 +96,7 @@ export default function Home() {
   const handleGeneratePoster = async () => {
     console.log('Starting poster generation...');
     setGenerationStatus('generating');
+    
     try {
       // Auto-detect API URL based on environment
       const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
@@ -144,7 +162,11 @@ export default function Home() {
       
       setFinalPosterUrl(data.finalUrl);
       setGenerationStatus('completed');
-      nextStep();
+      
+      // Show success notification
+      setTimeout(() => {
+        nextStep();
+      }, 1000);
     } catch (error) {
       console.error('Poster generation failed:', error);
       setGenerationStatus('error');
@@ -154,7 +176,7 @@ export default function Home() {
   const canProceed = () => {
     switch (currentStep) {
       case 'details':
-        return name.trim() && title.trim();
+        return name.trim().length >= 2 && title.trim().length >= 2;
       case 'photo':
         return photo.url && !showCropper;
       case 'template':
@@ -164,13 +186,66 @@ export default function Home() {
     }
   };
 
+  const getValidationMessage = () => {
+    switch (currentStep) {
+      case 'details':
+        if (!name.trim()) return 'Please enter your name';
+        if (name.trim().length < 2) return 'Name must be at least 2 characters';
+        if (!title.trim()) return 'Please enter your title/role';
+        if (title.trim().length < 2) return 'Title must be at least 2 characters';
+        return '';
+      case 'photo':
+        if (!photo.url) return 'Please upload a photo';
+        if (showCropper) return 'Please complete photo cropping';
+        return '';
+      case 'template':
+        if (!useTemplateStore.getState().selectedTemplate) return 'Please select a template';
+        return '';
+      default:
+        return '';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
+    <div className="min-h-screen bg-[#0A0A0A] relative">
+      {/* Loading/Success Overlay */}
+      {(generationStatus === 'generating' || generationStatus === 'completed') && (
+        <div className="fixed inset-0 bg-[#0A0A0A] bg-opacity-80 flex items-center justify-center z-50">
+          <div className="text-center">
+            {generationStatus === 'generating' ? (
+              <>
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FAFAFA] mx-auto mb-4"></div>
+                <p className="text-[#FAFAFA] text-lg font-medium">Generating your poster...</p>
+                <p className="text-[#A3A3A3] text-sm mt-2">This may take a few moments</p>
+              </>
+            ) : (
+              <>
+                <div className="bg-green-500 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-[#FAFAFA] text-lg font-medium">Poster generated successfully!</p>
+                <p className="text-[#A3A3A3] text-sm mt-2">Redirecting you to download...</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-[#171717] border-b border-[#262626]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#FAFAFA]">Postyup</h1>
-          <p className="text-[#A3A3A3] text-xs sm:text-sm mt-1">Create your political poster in minutes</p>
+          <div className="flex items-center gap-3">
+            <div className="bg-[#FAFAFA] p-2 rounded-lg">
+              <svg className="w-6 h-6 text-[#0A0A0A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-[#FAFAFA]">Postyup</h1>
+              <p className="text-[#A3A3A3] text-xs sm:text-sm mt-0.5">Create your political poster in minutes</p>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -303,22 +378,51 @@ export default function Home() {
           </div>
         )}
 
+        {/* Validation Message */}
+        {!canProceed() && getValidationMessage() && (
+          <div className="mt-4 p-3 bg-yellow-900 bg-opacity-50 border border-yellow-600 rounded-xl">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p className="text-yellow-200 text-sm">{getValidationMessage()}</p>
+            </div>
+          </div>
+        )}
+
         {/* Navigation */}
         <div className="flex flex-col sm:flex-row justify-between items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[#262626] space-y-3 sm:space-y-0">
           <button
             onClick={previousStep}
             disabled={currentStep === 'details'}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
           >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
             Previous
           </button>
           
           <button
-            onClick={nextStep}
+            onClick={currentStep === 'preview' ? handleGeneratePoster : nextStep}
             disabled={!canProceed() || currentStep === 'complete'}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
           >
-            {currentStep === 'preview' ? 'Generate Poster' : 'Next'}
+            {currentStep === 'preview' ? (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Generate Poster
+              </>
+            ) : (
+              <>
+                Next
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </>
+            )}
           </button>
         </div>
       </main>
