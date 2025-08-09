@@ -142,21 +142,28 @@ export class PosterService {
       // Add text overlays using SVG
       if (template.layoutConfig.textZones?.length > 0) {
         for (const textZone of template.layoutConfig.textZones) {
-          const textContent = textZone.type === 'name' ? supporterData.name : supporterData.title;
+          let textContent = textZone.type === 'name' ? supporterData.name : supporterData.title;
           if (!textContent) continue;
+
+          // Apply text transformations
+          if (textZone.textTransform === 'uppercase') {
+            textContent = textContent.toUpperCase();
+          }
 
           const textX = Math.round((textZone.x / 1080) * size);
           const textY = Math.round((textZone.y / 1080) * size);
           const textWidth = Math.round((textZone.width / 1080) * size);
           const fontSize = Math.round((textZone.fontSize / 1080) * size);
 
-          // Create SVG for text
+          // Create SVG for text with styling
+          const fontWeight = textZone.fontWeight || 'normal';
           const svgText = `
             <svg width="${textWidth}" height="${Math.round(fontSize * 1.5)}">
               <text x="${textZone.textAlign === 'center' ? '50%' : textZone.textAlign === 'right' ? '100%' : '0'}" 
                     y="${fontSize}" 
                     font-family="${textZone.fontFamily}" 
                     font-size="${fontSize}" 
+                    font-weight="${fontWeight}"
                     fill="${textZone.color}"
                     text-anchor="${textZone.textAlign === 'center' ? 'middle' : textZone.textAlign === 'right' ? 'end' : 'start'}"
                     dominant-baseline="hanging">
