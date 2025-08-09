@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { TemplateService } from '../template/template.service';
-import sharp from 'sharp';
+import * as sharp from 'sharp';
 
 @Injectable()
 export class PosterService {
