@@ -165,17 +165,17 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-[#0A0A0A]">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-[#171717] border-b border-[#262626]">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Postyup</h1>
-          <p className="text-gray-600 text-sm mt-1">Create your political poster in minutes</p>
+          <h1 className="text-2xl font-bold text-[#FAFAFA]">Postyup</h1>
+          <p className="text-[#A3A3A3] text-sm mt-1">Create your political poster in minutes</p>
         </div>
       </header>
 
       {/* Progress Bar */}
-      <div className="bg-white border-b">
+      <div className="bg-[#171717] border-b border-[#262626]">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center space-x-4">
             {['Details', 'Photo', 'Template', 'Preview', 'Complete'].map((step, index) => {
@@ -186,20 +186,20 @@ export default function Home() {
               return (
                 <div key={step} className="flex items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium ${
                       isCompleted
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-[#FAFAFA] text-[#0A0A0A]'
                         : isActive
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200 text-gray-600'
+                        ? 'bg-[#737373] text-[#FAFAFA]'
+                        : 'bg-[#404040] text-[#A3A3A3]'
                     }`}
                   >
                     {isCompleted ? '✓' : index + 1}
                   </div>
-                  <span className={`ml-2 text-sm ${isActive ? 'font-medium text-blue-600' : 'text-gray-600'}`}>
+                  <span className={`ml-2 text-sm ${isActive ? 'font-medium text-[#FAFAFA]' : 'text-[#A3A3A3]'}`}>
                     {step}
                   </span>
-                  {index < 4 && <div className="w-8 h-0.5 bg-gray-200 mx-4" />}
+                  {index < 4 && <div className="w-8 h-0.5 bg-[#404040] mx-4" />}
                 </div>
               );
             })}
@@ -212,13 +212,13 @@ export default function Home() {
         {currentStep === 'details' && (
           <div className="max-w-md mx-auto space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Tell us about yourself</h2>
-              <p className="text-gray-600">Enter your details to get started</p>
+              <h2 className="text-2xl font-bold text-[#FAFAFA] mb-2">Tell us about yourself</h2>
+              <p className="text-[#A3A3A3]">Enter your details to get started</p>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[#FAFAFA] mb-2">
                   Your Name *
                 </label>
                 <input
@@ -226,12 +226,12 @@ export default function Home() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="John Doe"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                  className="w-full px-4 py-3 bg-[#262626] border border-[#404040] rounded-xl focus:ring-2 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] placeholder-[#A3A3A3] text-base"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[#FAFAFA] mb-2">
                   Your Title/Role *
                 </label>
                 <input
@@ -239,7 +239,7 @@ export default function Home() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Small Business Owner"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                  className="w-full px-4 py-3 bg-[#262626] border border-[#404040] rounded-xl focus:ring-2 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] placeholder-[#A3A3A3] text-base"
                 />
               </div>
             </div>
@@ -249,8 +249,8 @@ export default function Home() {
         {currentStep === 'photo' && (
           <div className="max-w-md mx-auto space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Add your photo</h2>
-              <p className="text-gray-600">Upload a clear photo of yourself</p>
+              <h2 className="text-2xl font-bold text-[#FAFAFA] mb-2">Add your photo</h2>
+              <p className="text-[#A3A3A3]">Upload a clear photo of yourself</p>
             </div>
             
             {!showCropper ? (
@@ -267,8 +267,8 @@ export default function Home() {
         {currentStep === 'template' && (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Choose your template</h2>
-              <p className="text-gray-600">Select a poster design that fits your campaign</p>
+              <h2 className="text-2xl font-bold text-[#FAFAFA] mb-2">Choose your template</h2>
+              <p className="text-[#A3A3A3]">Select a poster design that fits your campaign</p>
             </div>
             
             <TemplateGallery onTemplateSelect={handleTemplateSelect} />
@@ -278,8 +278,8 @@ export default function Home() {
         {currentStep === 'preview' && (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Preview your poster</h2>
-              <p className="text-gray-600">Review and generate your final poster</p>
+              <h2 className="text-2xl font-bold text-[#FAFAFA] mb-2">Preview your poster</h2>
+              <p className="text-[#A3A3A3]">Review and generate your final poster</p>
             </div>
             
             <PosterPreview 
@@ -292,8 +292,8 @@ export default function Home() {
         {currentStep === 'complete' && (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Your poster is ready!</h2>
-              <p className="text-gray-600">Download and share your professional poster</p>
+              <h2 className="text-2xl font-bold text-[#FAFAFA] mb-2">Your poster is ready!</h2>
+              <p className="text-[#A3A3A3]">Download and share your professional poster</p>
             </div>
             
             <div className="max-w-md mx-auto">
@@ -304,11 +304,11 @@ export default function Home() {
         )}
 
         {/* Navigation */}
-        <div className="flex justify-between items-center mt-8 pt-6 border-t">
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-[#262626]">
           <button
             onClick={previousStep}
             disabled={currentStep === 'details'}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+            className="px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
           >
             Previous
           </button>
@@ -316,7 +316,7 @@ export default function Home() {
           <button
             onClick={nextStep}
             disabled={!canProceed() || currentStep === 'complete'}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+            className="px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
           >
             {currentStep === 'preview' ? 'Generate Poster' : 'Next'}
           </button>

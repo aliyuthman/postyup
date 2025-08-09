@@ -63,7 +63,7 @@ export class TemplateService {
               y: 893.34,
               width: 370.69,
               height: 120,
-              fontSize: 0.0292, // 2.92% - converted from 14pt at 300 DPI (31.5/1080)
+              fontSize: 0.0278, // 30px at 1080px (30/1080)
               fontFamily: 'Inter',
               fontWeight: 'bold',
               color: '#000000',
@@ -76,7 +76,7 @@ export class TemplateService {
               y: 967.97,
               width: 368.53,
               height: 100,
-              fontSize: 0.025, // 2.5% - converted from 12pt at 300 DPI (27/1080)
+              fontSize: 0.0222, // 24px at 1080px (24/1080)
               fontFamily: 'Inter',
               fontWeight: 'normal',
               color: '#666666',
