@@ -85,17 +85,43 @@ export default function Home() {
       console.log('API URL:', apiUrl);
       console.log('Template ID:', templateId);
       console.log('Supporter data:', { name, title });
-      console.log('Photo URL:', photo.url);
+      console.log('Photo file:', photo.file);
       console.log('Session ID:', sessionId);
+
+      // Check if photo file exists
+      if (!photo.file) {
+        throw new Error('No photo file available');
+      }
+
+      // First, upload the photo to get a server-accessible URL
+      console.log('Uploading photo...');
+      const formData = new FormData();
+      formData.append('photo', photo.file);
+      formData.append('sessionId', sessionId);
+
+      const uploadResponse = await fetch(`${apiUrl}/api/photo/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const uploadError = await uploadResponse.text();
+        console.error('Photo upload failed:', uploadError);
+        throw new Error(`Photo upload failed: ${uploadResponse.status} - ${uploadError}`);
+      }
+
+      const uploadData = await uploadResponse.json();
+      console.log('Photo uploaded successfully:', uploadData.photoUrl);
       
-      // Generate final poster through API
+      // Now generate the poster with the uploaded photo URL
+      console.log('Generating poster...');
       const response = await fetch(`${apiUrl}/api/poster/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateId,
           supporterData: { name, title },
-          photoUrl: photo.url,
+          photoUrl: uploadData.photoUrl,
           sessionId,
         }),
       });
