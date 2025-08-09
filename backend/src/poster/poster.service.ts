@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { TemplateService } from '../template/template.service';
 import * as sharp from 'sharp';
+import { createCanvas, loadImage, registerFont } from 'canvas';
 
 @Injectable()
 export class PosterService {
@@ -139,7 +140,7 @@ export class PosterService {
         });
       }
 
-      // Add text overlays using Sharp's composite with individual text images
+      // Add text overlays using Canvas API for proper text rendering
       if (template.layoutConfig.textZones?.length > 0) {
         console.log(`Processing ${template.layoutConfig.textZones.length} text zones`);
         
@@ -161,21 +162,45 @@ export class PosterService {
           
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
-          // Create text as an image using Canvas API through sharp
-          const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
-          const textHeight = Math.round(fontSize * 1.5);
-          
           try {
-            // Simple approach: create a solid color text using SVG, then rasterize it
-            const svgText = `<svg width="${textWidth}" height="${textHeight}" xmlns="http://www.w3.org/2000/svg">
-              <text x="5" y="${fontSize}" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="${fontWeight}" fill="${textZone.color}">${textContent}</text>
-            </svg>`;
+            // Create canvas for text rendering
+            const textHeight = Math.round(fontSize * 1.5);
+            const canvas = createCanvas(textWidth, textHeight);
+            const ctx = canvas.getContext('2d');
 
-            console.log(`SVG text created: ${svgText.substring(0, 100)}...`);
+            // Set font properties
+            const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
+            ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
+            ctx.fillStyle = textZone.color;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
 
-            const textImageBuffer = await sharp(Buffer.from(svgText))
-              .png()
-              .toBuffer();
+            // Enable text antialiasing for better quality
+            ctx.antialias = 'default';
+            ctx.textRenderingOptimization = 'optimizeQuality';
+
+            // Draw text with proper wrapping
+            const words = textContent.split(' ');
+            let line = '';
+            let y = 0;
+            const lineHeight = fontSize * 1.2;
+
+            for (let i = 0; i < words.length; i++) {
+              const testLine = line + words[i] + ' ';
+              const metrics = ctx.measureText(testLine);
+              
+              if (metrics.width > textWidth && i > 0) {
+                ctx.fillText(line, 0, y);
+                line = words[i] + ' ';
+                y += lineHeight;
+              } else {
+                line = testLine;
+              }
+            }
+            ctx.fillText(line, 0, y);
+
+            // Convert canvas to buffer
+            const textImageBuffer = canvas.toBuffer('image/png');
 
             overlays.push({
               input: textImageBuffer,
@@ -183,15 +208,15 @@ export class PosterService {
               left: textX,
             });
             
-            console.log(`Added text overlay at position ${textX}, ${textY}`);
+            console.log(`Added Canvas text overlay at position ${textX}, ${textY}`);
           } catch (textError) {
-            console.error('Error creating text overlay:', textError);
+            console.error('Error creating Canvas text overlay:', textError);
             
             // Fallback: create a colored rectangle to show positioning works
             const fallbackRect = await sharp({
               create: {
                 width: textWidth,
-                height: textHeight,
+                height: Math.round(fontSize * 1.5),
                 channels: 4,
                 background: { r: 255, g: 255, b: 0, alpha: 0.8 } // Yellow rectangle as fallback
               }
