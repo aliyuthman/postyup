@@ -15,7 +15,7 @@ export default function Home() {
   const { currentStep, nextStep, previousStep, setSessionId } = useSessionStore();
   const { name, title, photo, setName, setTitle, setPhoto } = useSupporterStore();
   const { setSelectedTemplate, setTemplates, setLoading } = useTemplateStore();
-  const { setFinalPosterUrl, setGenerationStatus, generationStatus } = usePosterStore();
+  const { setFinalPosterUrl, setGenerationStatus, generationStatus, finalPosterUrl } = usePosterStore();
 
   const [showCropper, setShowCropper] = useState(false);
 
@@ -163,10 +163,10 @@ export default function Home() {
       setFinalPosterUrl(data.finalUrl);
       setGenerationStatus('completed');
       
-      // Show success notification
+      // Clear success state after a moment - user stays on preview
       setTimeout(() => {
-        nextStep();
-      }, 1000);
+        setGenerationStatus('idle');
+      }, 2000);
     } catch (error) {
       console.error('Poster generation failed:', error);
       setGenerationStatus('error');
@@ -181,6 +181,8 @@ export default function Home() {
         return photo.url && !showCropper;
       case 'template':
         return useTemplateStore.getState().selectedTemplate;
+      case 'preview':
+        return false; // No next step from preview
       default:
         return true;
     }
@@ -201,6 +203,8 @@ export default function Home() {
       case 'template':
         if (!useTemplateStore.getState().selectedTemplate) return 'Please select a template';
         return '';
+      case 'preview':
+        return ''; // No validation needed on final step
       default:
         return '';
     }
@@ -253,8 +257,8 @@ export default function Home() {
       <div className="bg-[#171717] border-b border-[#262626]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
-            {['Details', 'Photo', 'Template', 'Preview', 'Complete'].map((step, index) => {
-              const stepNames: string[] = ['details', 'photo', 'template', 'preview', 'complete'];
+            {['Details', 'Photo', 'Template', 'Preview'].map((step, index) => {
+              const stepNames: string[] = ['details', 'photo', 'template', 'preview'];
               const isActive = stepNames[index] === currentStep;
               const isCompleted = stepNames.indexOf(currentStep) > index;
               
@@ -274,7 +278,7 @@ export default function Home() {
                   <span className={`ml-1 sm:ml-2 text-xs sm:text-sm ${isActive ? 'font-medium text-[#FAFAFA]' : 'text-[#A3A3A3]'} whitespace-nowrap`}>
                     {step}
                   </span>
-                  {index < 4 && <div className="w-4 sm:w-8 h-0.5 bg-[#404040] mx-2 sm:mx-4" />}
+                  {index < 3 && <div className="w-4 sm:w-8 h-0.5 bg-[#404040] mx-2 sm:mx-4" />}
                 </div>
               );
             })}
@@ -353,27 +357,22 @@ export default function Home() {
         {currentStep === 'preview' && (
           <div className="space-y-4 sm:space-y-6">
             <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Preview your poster</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Review and generate your final poster</p>
-            </div>
-            
-            <PosterPreview 
-              showControls={true}
-              onGenerate={handleGeneratePoster}
-            />
-          </div>
-        )}
-
-        {currentStep === 'complete' && (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Your poster is ready!</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Download and share your professional poster</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">
+                {finalPosterUrl ? 'Your poster is ready!' : 'Preview your poster'}
+              </h2>
+              <p className="text-[#A3A3A3] text-sm sm:text-base">
+                {finalPosterUrl 
+                  ? 'Download and share your professional poster' 
+                  : 'Review and generate your final poster'}
+              </p>
             </div>
             
             <div className="max-w-md mx-auto">
-              <PosterPreview showControls={false} />
-              <SocialShare />
+              <PosterPreview 
+                showControls={!finalPosterUrl}
+                onGenerate={handleGeneratePoster}
+              />
+              {finalPosterUrl && <SocialShare />}
             </div>
           </div>
         )}
@@ -403,27 +402,34 @@ export default function Home() {
             Previous
           </button>
           
-          <button
-            onClick={currentStep === 'preview' ? handleGeneratePoster : nextStep}
-            disabled={!canProceed() || currentStep === 'complete'}
-            className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
-          >
-            {currentStep === 'preview' ? (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Generate Poster
-              </>
-            ) : (
-              <>
-                Next
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </>
-            )}
-          </button>
+          {currentStep === 'preview' && finalPosterUrl ? (
+            <button
+              onClick={() => {
+                // Clear poster and restart
+                usePosterStore.getState().reset();
+                useSessionStore.getState().reset();
+                useSupporterStore.getState().reset();
+                useTemplateStore.getState().setSelectedTemplate(null);
+              }}
+              className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] transition-colors font-medium min-h-[44px]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Start Over
+            </button>
+          ) : currentStep !== 'preview' ? (
+            <button
+              onClick={nextStep}
+              disabled={!canProceed()}
+              className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+            >
+              Next
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : null}
         </div>
       </main>
     </div>
