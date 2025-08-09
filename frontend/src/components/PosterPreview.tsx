@@ -97,7 +97,8 @@ export default function PosterPreview({
         if (!textContent) return;
 
         // Apply text transformations
-        if ((textZone as any).textTransform === 'uppercase') {
+        const extendedTextZone = textZone as typeof textZone & { textTransform?: string; fontWeight?: string };
+        if (extendedTextZone.textTransform === 'uppercase') {
           textContent = textContent.toUpperCase();
         }
 
@@ -106,7 +107,7 @@ export default function PosterPreview({
         const fontSize = (textZone.fontSize / 1080) * width;
 
         // Build font string with weight
-        const fontWeight = (textZone as any).fontWeight || 'normal';
+        const fontWeight = extendedTextZone.fontWeight || 'normal';
         ctx.font = `${fontWeight} ${fontSize}px ${textZone.fontFamily}`;
         ctx.fillStyle = textZone.color;
         ctx.textAlign = textZone.textAlign as CanvasTextAlign;
