@@ -163,19 +163,23 @@ export class PosterService {
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
           try {
-            // Create HTML for text rendering
-            const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
+            // Create HTML for text rendering  
+            // Map font weights to Inter's available weights
+            const fontWeight = textZone.fontWeight === 'bold' ? '700' : '400';
             const textHeight = Math.round(fontSize * 1.5);
             
             const html = `
               <!DOCTYPE html>
               <html>
                 <head>
+                  <link rel="preconnect" href="https://fonts.googleapis.com">
+                  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
                   <style>
                     body {
                       margin: 0;
                       padding: 0;
-                      font-family: Arial, sans-serif;
+                      font-family: 'Inter', Arial, sans-serif;
                       background: transparent;
                     }
                     .text-container {
@@ -211,6 +215,10 @@ export class PosterService {
             const page = await browser.newPage();
             await page.setContent(html);
             await page.setViewport({ width: textWidth, height: textHeight });
+            
+            // Wait for fonts to load
+            await page.evaluate(() => document.fonts.ready);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Give fonts time to load
 
             // Take screenshot of text
             const textImageBuffer = await page.screenshot({
