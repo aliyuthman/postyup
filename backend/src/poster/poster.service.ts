@@ -184,11 +184,15 @@ export class PosterService {
                       font-size: ${fontSize}px;
                       font-weight: ${fontWeight};
                       color: ${textZone.color};
-                      line-height: 1.2;
+                      line-height: 1.1;
                       word-wrap: break-word;
                       overflow-wrap: break-word;
+                      hyphens: auto;
                       padding: 0;
                       margin: 0;
+                      display: flex;
+                      align-items: flex-start;
+                      text-align: left;
                     }
                   </style>
                 </head>
