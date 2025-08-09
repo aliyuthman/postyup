@@ -91,7 +91,25 @@ export default function PosterPreview({
         ctx.restore();
       }
 
-      // Draw text overlays
+      // Calculate name line count for dynamic spacing
+      let nameLineCount = 1;
+      const nameZone = selectedTemplate.layoutConfig.textZones.find(zone => zone.type === 'name');
+      if (nameZone && name) {
+        const nameContent = nameZone.textTransform === 'uppercase' ? name.toUpperCase() : name;
+        const nameWidth = (nameZone.width / 1080) * width;
+        const nameFontSize = Math.max(nameZone.fontSize * width, 12);
+        
+        // Create temporary context to measure
+        ctx.save();
+        const fontWeight = nameZone.fontWeight || 'normal';
+        ctx.font = `${fontWeight} ${nameFontSize}px ${nameZone.fontFamily}`;
+        
+        const lines = wrapText(ctx, nameContent, nameWidth);
+        nameLineCount = lines.length;
+        ctx.restore();
+      }
+
+      // Draw text overlays with dynamic spacing
       selectedTemplate.layoutConfig.textZones.forEach((textZone) => {
         let textContent = textZone.type === 'name' ? name : title;
         if (!textContent) return;
@@ -103,8 +121,19 @@ export default function PosterPreview({
         }
 
         const textX = (textZone.x / 1080) * width;
-        const textY = (textZone.y / 1080) * height;
+        let textY = (textZone.y / 1080) * height;
         const fontSize = Math.max(textZone.fontSize * width, 12); // fontSize is now percentage, with minimum 12px
+
+        // Adjust vertical spacing for title based on name line count
+        if (textZone.type === 'title') {
+          const baseSpacing = (74.63 / 1080) * height; // Original spacing between name and title
+          const reducedSpacing = (40 / 1080) * height; // Closer spacing for single-line names
+          
+          if (nameLineCount === 1) {
+            // Single line name - bring title closer
+            textY = textY - (baseSpacing - reducedSpacing);
+          }
+        }
 
         // Build font string with weight
         const fontWeight = extendedTextZone.fontWeight || 'normal';

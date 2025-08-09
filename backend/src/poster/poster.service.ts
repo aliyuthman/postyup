@@ -140,9 +140,41 @@ export class PosterService {
         });
       }
 
-      // Add text overlays using Fabric.js for professional text rendering
+      // Add text overlays with dynamic vertical spacing
       if (template.layoutConfig.textZones?.length > 0) {
-        console.log(`Processing ${template.layoutConfig.textZones.length} text zones with Fabric.js`);
+        console.log(`Processing ${template.layoutConfig.textZones.length} text zones with dynamic spacing`);
+        
+        // First pass: calculate name text dimensions for dynamic spacing
+        let nameLineCount = 1;
+        const nameZone = template.layoutConfig.textZones.find(zone => zone.type === 'name');
+        if (nameZone && supporterData.name) {
+          const nameContent = nameZone.textTransform === 'uppercase' ? supporterData.name.toUpperCase() : supporterData.name;
+          const nameWidth = Math.round((nameZone.width / 1080) * size);
+          const nameFontSize = Math.max(nameZone.fontSize * size, 16);
+          
+          // Create temporary canvas to measure text
+          const tempCanvas = createCanvas(nameWidth, 100);
+          const tempCtx = tempCanvas.getContext('2d');
+          const fontWeight = nameZone.fontWeight === 'bold' ? 'bold' : 'normal';
+          tempCtx.font = `${fontWeight} ${nameFontSize}px Arial, sans-serif`;
+          
+          // Calculate how many lines the name will take
+          const words = nameContent.split(' ');
+          let line = '';
+          for (let i = 0; i < words.length; i++) {
+            const testLine = line + words[i] + ' ';
+            const metrics = tempCtx.measureText(testLine);
+            
+            if (metrics.width > nameWidth && i > 0) {
+              nameLineCount++;
+              line = words[i] + ' ';
+            } else {
+              line = testLine;
+            }
+          }
+        }
+        
+        console.log(`Name will use ${nameLineCount} lines`);
         
         for (const textZone of template.layoutConfig.textZones) {
           let textContent = textZone.type === 'name' ? supporterData.name : supporterData.title;
@@ -156,11 +188,23 @@ export class PosterService {
           }
 
           const textX = Math.round((textZone.x / 1080) * size);
-          const textY = Math.round((textZone.y / 1080) * size);
+          let textY = Math.round((textZone.y / 1080) * size);
           const textWidth = Math.round((textZone.width / 1080) * size);
           const textHeight = Math.round((textZone.height / 1080) * size);
           const calculatedFontSize = Math.round(textZone.fontSize * size);
           const fontSize = Math.max(calculatedFontSize, 16); // Minimum 16px for readability
+          
+          // Adjust vertical spacing for title based on name line count
+          if (textZone.type === 'title') {
+            const baseSpacing = Math.round((74.63 / 1080) * size); // Original spacing between name and title (967.97 - 893.34)
+            const reducedSpacing = Math.round((40 / 1080) * size); // Closer spacing for single-line names
+            
+            if (nameLineCount === 1) {
+              // Single line name - bring title closer
+              textY = textY - (baseSpacing - reducedSpacing);
+              console.log(`Adjusting title position: reducing gap by ${baseSpacing - reducedSpacing}px for single-line name`);
+            }
+          }
           
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
