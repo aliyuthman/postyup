@@ -66,26 +66,43 @@ export default function Home() {
   };
 
   const handleGeneratePoster = async () => {
+    console.log('Starting poster generation...');
     setGenerationStatus('generating');
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const templateId = useTemplateStore.getState().selectedTemplate?.id;
+      const sessionId = useSessionStore.getState().sessionId;
+      
+      console.log('API URL:', apiUrl);
+      console.log('Template ID:', templateId);
+      console.log('Supporter data:', { name, title });
+      console.log('Photo URL:', photo.url);
+      console.log('Session ID:', sessionId);
+      
       // Generate final poster through API
       const response = await fetch(`${apiUrl}/api/poster/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          templateId: useTemplateStore.getState().selectedTemplate?.id,
+          templateId,
           supporterData: { name, title },
           photoUrl: photo.url,
-          sessionId: useSessionStore.getState().sessionId,
+          sessionId,
         }),
       });
 
+      console.log('API response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('API response data:', data);
+      console.log('Final poster URL:', data.finalUrl);
+      
       setFinalPosterUrl(data.finalUrl);
       setGenerationStatus('completed');
       nextStep();
