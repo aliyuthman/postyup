@@ -176,8 +176,7 @@ export class PosterService {
             ctx.textBaseline = 'top';
 
             // Enable text antialiasing for better quality
-            ctx.antialias = 'default';
-            ctx.textRenderingOptimization = 'optimizeQuality';
+            ctx.imageSmoothingEnabled = true;
 
             // Draw text with proper wrapping
             const words = textContent.split(' ');
