@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { TemplateService } from '../template/template.service';
 import * as sharp from 'sharp';
-import { Canvas, Text } from 'fabric';
-import { createCanvas } from 'canvas';
+import { createCanvas, CanvasRenderingContext2D } from 'canvas';
 
 @Injectable()
 export class PosterService {
@@ -165,34 +164,39 @@ export class PosterService {
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
           try {
-            // Create fabric canvas for text rendering
-            const nodeCanvas = createCanvas(textWidth, textHeight);
-            const fabricCanvas = new Canvas(nodeCanvas as any);
+            // Create canvas for text rendering using native Canvas API
+            const canvas = createCanvas(textWidth, textHeight);
+            const ctx = canvas.getContext('2d');
 
-            // Create fabric text object
+            // Set font properties
             const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
-            const fabricText = new Text(textContent, {
-              left: 0,
-              top: 0,
-              fontFamily: 'Inter, Arial, sans-serif',
-              fontSize: fontSize,
-              fontWeight: fontWeight,
-              fill: textZone.color,
-              textAlign: textZone.textAlign || 'left',
-              width: textWidth,
-              splitByGrapheme: true, // Better text wrapping
-              lineHeight: 1.1
-            });
+            ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
+            ctx.fillStyle = textZone.color;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
 
-            // Add text to canvas
-            fabricCanvas.add(fabricText);
-            
-            // Render and get buffer
-            fabricCanvas.renderAll();
-            const textImageBuffer = nodeCanvas.toBuffer('image/png');
+            // Simple text wrapping
+            const words = textContent.split(' ');
+            let line = '';
+            let y = 0;
+            const lineHeight = fontSize * 1.2;
 
-            // Dispose fabric canvas
-            fabricCanvas.dispose();
+            for (let i = 0; i < words.length; i++) {
+              const testLine = line + words[i] + ' ';
+              const metrics = ctx.measureText(testLine);
+              
+              if (metrics.width > textWidth && i > 0) {
+                ctx.fillText(line, 0, y);
+                line = words[i] + ' ';
+                y += lineHeight;
+              } else {
+                line = testLine;
+              }
+            }
+            ctx.fillText(line, 0, y);
+
+            // Get buffer
+            const textImageBuffer = canvas.toBuffer('image/png');
 
             overlays.push({
               input: textImageBuffer,
@@ -200,9 +204,9 @@ export class PosterService {
               left: textX,
             });
             
-            console.log(`Added Fabric.js text overlay at position ${textX}, ${textY}`);
+            console.log(`Added Canvas text overlay at position ${textX}, ${textY}`);
           } catch (textError) {
-            console.error('Error creating Fabric.js text overlay:', textError);
+            console.error('Error creating Canvas text overlay:', textError);
             
             // Fallback: create a colored rectangle to show positioning works
             const fallbackRect = await sharp({
