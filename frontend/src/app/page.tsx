@@ -22,7 +22,9 @@ export default function Home() {
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      // Auto-detect API URL based on environment
+      const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+      const apiUrl = isLocal ? 'http://localhost:3001' : (process.env.NEXT_PUBLIC_API_URL || 'https://postyup.up.railway.app');
       const response = await fetch(`${apiUrl}/api/templates`);
       
       if (!response.ok) {
@@ -78,7 +80,9 @@ export default function Home() {
     console.log('Starting poster generation...');
     setGenerationStatus('generating');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      // Auto-detect API URL based on environment
+      const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+      const apiUrl = isLocal ? 'http://localhost:3001' : (process.env.NEXT_PUBLIC_API_URL || 'https://postyup.up.railway.app');
       const templateId = useTemplateStore.getState().selectedTemplate?.id;
       const sessionId = useSessionStore.getState().sessionId;
       

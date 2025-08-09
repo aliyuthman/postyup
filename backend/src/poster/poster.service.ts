@@ -139,11 +139,15 @@ export class PosterService {
         });
       }
 
-      // Add text overlays using SVG
+      // Add text overlays using Sharp's composite with individual text images
       if (template.layoutConfig.textZones?.length > 0) {
+        console.log(`Processing ${template.layoutConfig.textZones.length} text zones`);
+        
         for (const textZone of template.layoutConfig.textZones) {
           let textContent = textZone.type === 'name' ? supporterData.name : supporterData.title;
           if (!textContent) continue;
+
+          console.log(`Processing text: "${textContent}" of type: ${textZone.type}`);
 
           // Apply text transformations
           if (textZone.textTransform === 'uppercase') {
@@ -154,29 +158,53 @@ export class PosterService {
           const textY = Math.round((textZone.y / 1080) * size);
           const textWidth = Math.round((textZone.width / 1080) * size);
           const fontSize = Math.round((textZone.fontSize / 1080) * size);
+          
+          console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
-          // Create SVG for text with styling
-          const fontWeight = textZone.fontWeight || 'normal';
-          const svgText = `
-            <svg width="${textWidth}" height="${Math.round(fontSize * 1.5)}">
-              <text x="${textZone.textAlign === 'center' ? '50%' : textZone.textAlign === 'right' ? '100%' : '0'}" 
-                    y="${fontSize}" 
-                    font-family="${textZone.fontFamily}" 
-                    font-size="${fontSize}" 
-                    font-weight="${fontWeight}"
-                    fill="${textZone.color}"
-                    text-anchor="${textZone.textAlign === 'center' ? 'middle' : textZone.textAlign === 'right' ? 'end' : 'start'}"
-                    dominant-baseline="hanging">
-                ${textContent}
-              </text>
-            </svg>
-          `;
+          // Create text as an image using Canvas API through sharp
+          const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
+          const textHeight = Math.round(fontSize * 1.5);
+          
+          try {
+            // Simple approach: create a solid color text using SVG, then rasterize it
+            const svgText = `<svg width="${textWidth}" height="${textHeight}" xmlns="http://www.w3.org/2000/svg">
+              <text x="5" y="${fontSize}" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="${fontWeight}" fill="${textZone.color}">${textContent}</text>
+            </svg>`;
 
-          overlays.push({
-            input: Buffer.from(svgText),
-            top: textY,
-            left: textX,
-          });
+            console.log(`SVG text created: ${svgText.substring(0, 100)}...`);
+
+            const textImageBuffer = await sharp(Buffer.from(svgText))
+              .png()
+              .toBuffer();
+
+            overlays.push({
+              input: textImageBuffer,
+              top: textY,
+              left: textX,
+            });
+            
+            console.log(`Added text overlay at position ${textX}, ${textY}`);
+          } catch (textError) {
+            console.error('Error creating text overlay:', textError);
+            
+            // Fallback: create a colored rectangle to show positioning works
+            const fallbackRect = await sharp({
+              create: {
+                width: textWidth,
+                height: textHeight,
+                channels: 4,
+                background: { r: 255, g: 255, b: 0, alpha: 0.8 } // Yellow rectangle as fallback
+              }
+            }).png().toBuffer();
+
+            overlays.push({
+              input: fallbackRect,
+              top: textY,
+              left: textX,
+            });
+            
+            console.log(`Added fallback rectangle at position ${textX}, ${textY}`);
+          }
         }
       }
 

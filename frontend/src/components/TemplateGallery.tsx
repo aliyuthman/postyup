@@ -4,6 +4,7 @@ import { useTemplateStore, Template } from '@/stores/templateStore';
 
 interface TemplateGalleryProps {
   onTemplateSelect: (template: Template) => void;
+  campaignId?: string;
 }
 
 export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryProps) {

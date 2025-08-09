@@ -41,6 +41,7 @@ export class TemplateController {
     }
   }
 
+
   @Get(':id')
   @ApiOperation({ summary: 'Get template by ID' })
   @ApiParam({ name: 'id', description: 'Template ID' })

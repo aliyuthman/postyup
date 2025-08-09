@@ -64,7 +64,7 @@ export default function PosterPreview({
           userImg.src = photo.url!;
         });
 
-        // Calculate photo position and size
+        // Calculate photo position and size (based on 1080x1080 final size)
         const photoX = (photoZone.x / 1080) * width;
         const photoY = (photoZone.y / 1080) * height;
         const photoWidth = (photoZone.width / 1080) * width;
@@ -117,7 +117,8 @@ export default function PosterPreview({
         const lines = wrapText(ctx, textContent, maxWidth);
         
         lines.forEach((line, index) => {
-          const lineY = textY + (index * fontSize * 1.2);
+          const lineHeight = fontSize * 1.3; // Improved line height for better readability
+          const lineY = textY + (index * lineHeight);
           ctx.fillText(line, textX, lineY);
         });
       });
@@ -139,6 +140,23 @@ export default function PosterPreview({
       if (metrics.width > maxWidth && currentLine) {
         lines.push(currentLine);
         currentLine = word;
+        
+        // Check if single word is too long, break it character by character
+        const singleWordMetrics = ctx.measureText(word);
+        if (singleWordMetrics.width > maxWidth) {
+          let partialWord = '';
+          for (let i = 0; i < word.length; i++) {
+            const testChar = partialWord + word[i];
+            const charMetrics = ctx.measureText(testChar);
+            if (charMetrics.width > maxWidth && partialWord) {
+              lines.push(partialWord);
+              partialWord = word[i];
+            } else {
+              partialWord = testChar;
+            }
+          }
+          currentLine = partialWord;
+        }
       } else {
         currentLine = testLine;
       }
