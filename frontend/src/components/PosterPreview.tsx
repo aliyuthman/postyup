@@ -104,7 +104,7 @@ export default function PosterPreview({
 
         const textX = (textZone.x / 1080) * width;
         const textY = (textZone.y / 1080) * height;
-        const fontSize = (textZone.fontSize / 1080) * width;
+        const fontSize = Math.max(textZone.fontSize * width, 12); // fontSize is now percentage, with minimum 12px
 
         // Build font string with weight
         const fontWeight = extendedTextZone.fontWeight || 'normal';
@@ -171,17 +171,17 @@ export default function PosterPreview({
 
   if (!selectedTemplate) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-          <p className="text-gray-500">Select a template to preview</p>
+      <div className="w-full max-w-sm sm:max-w-md mx-auto">
+        <div className="aspect-square bg-[#262626] rounded-xl flex items-center justify-center">
+          <p className="text-[#A3A3A3] text-sm">Select a template to preview</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+    <div className="w-full max-w-sm sm:max-w-md mx-auto">
+      <div className="aspect-square bg-[#262626] rounded-xl overflow-hidden border border-[#404040]">
         <canvas
           ref={canvasRef}
           className="w-full h-full object-contain"
@@ -190,18 +190,18 @@ export default function PosterPreview({
       </div>
       
       {showControls && (
-        <div className="mt-4 space-y-3">
-          <div className="text-sm text-gray-600">
-            <p><strong>Name:</strong> {name || 'Not set'}</p>
-            <p><strong>Title:</strong> {title || 'Not set'}</p>
-            <p><strong>Template:</strong> {selectedTemplate.name}</p>
+        <div className="mt-3 sm:mt-4 space-y-3">
+          <div className="text-xs sm:text-sm text-[#A3A3A3] bg-[#262626] p-3 rounded-xl border border-[#404040]">
+            <p><span className="text-[#FAFAFA] font-medium">Name:</span> {name || 'Not set'}</p>
+            <p><span className="text-[#FAFAFA] font-medium">Title:</span> {title || 'Not set'}</p>
+            <p><span className="text-[#FAFAFA] font-medium">Template:</span> {selectedTemplate.name}</p>
           </div>
           
           {onGenerate && (
             <button
               onClick={onGenerate}
               disabled={!name || !title || !photo.url}
-              className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+              className="w-full py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:bg-[#404040] disabled:text-[#737373] disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
             >
               Generate Final Poster
             </button>

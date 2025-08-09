@@ -61,10 +61,10 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
   return (
     <div className="w-full max-w-md mx-auto">
       <div
-        className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+        className={`relative border-2 border-dashed rounded-xl p-4 sm:p-6 text-center transition-colors ${
           dragActive
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
+            ? 'border-[#737373] bg-[#262626]'
+            : 'border-[#404040] hover:border-[#525252]'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -84,20 +84,20 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
             <img
               src={photo.url}
               alt="Selected photo"
-              className="w-32 h-32 object-cover rounded-lg mx-auto"
+              className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-xl mx-auto"
             />
             <button
               onClick={openFileSelector}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-sm bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] transition-colors font-medium"
             >
               Change Photo
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="text-gray-400">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="text-[#737373]">
               <svg
-                className="w-12 h-12 mx-auto"
+                className="w-10 h-10 sm:w-12 sm:h-12 mx-auto"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -111,22 +111,22 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
               </svg>
             </div>
             <div>
-              <p className="text-lg font-medium text-gray-700 mb-2">
+              <p className="text-base sm:text-lg font-medium text-[#FAFAFA] mb-2">
                 Add your photo
               </p>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-xs sm:text-sm text-[#A3A3A3] mb-3 sm:mb-4">
                 Drag and drop or click to browse
               </p>
-              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <div className="flex flex-col gap-2 justify-center">
                 <button
                   onClick={openFileSelector}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium min-h-[44px]"
+                  className="px-4 sm:px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] transition-colors font-medium min-h-[44px]"
                 >
                   Choose File
                 </button>
                 <button
                   onClick={handleCameraCapture}
-                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium min-h-[44px]"
+                  className="px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] transition-colors font-medium min-h-[44px]"
                 >
                   Take Photo
                 </button>

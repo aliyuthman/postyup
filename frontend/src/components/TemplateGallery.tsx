@@ -31,9 +31,9 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
   if (isLoading) {
     return (
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading templates...</p>
+        <div className="text-center py-6 sm:py-8">
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-[#FAFAFA] mx-auto"></div>
+          <p className="mt-4 text-[#A3A3A3] text-sm sm:text-base">Loading templates...</p>
         </div>
       </div>
     );
@@ -42,8 +42,8 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
   if (error) {
     return (
       <div className="w-full max-w-4xl mx-auto">
-        <div className="text-center py-8">
-          <p className="text-red-600">Error loading templates: {error}</p>
+        <div className="text-center py-6 sm:py-8">
+          <p className="text-red-400 text-sm sm:text-base">Error loading templates: {error}</p>
         </div>
       </div>
     );
@@ -52,15 +52,15 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Category Filter */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">Categories</h3>
+      <div className="mb-4 sm:mb-6">
+        <h3 className="text-base sm:text-lg font-semibold text-[#FAFAFA] mb-3">Categories</h3>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => handleCategorySelect(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors min-h-[44px] ${
+            className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors min-h-[40px] sm:min-h-[44px] ${
               selectedCategory === null
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-[#FAFAFA] text-[#0A0A0A]'
+                : 'bg-[#404040] text-[#FAFAFA] hover:bg-[#525252]'
             }`}
           >
             All
@@ -69,10 +69,10 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
             <button
               key={category}
               onClick={() => handleCategorySelect(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors min-h-[44px] ${
+              className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors min-h-[40px] sm:min-h-[44px] ${
                 selectedCategory === category
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-[#FAFAFA] text-[#0A0A0A]'
+                  : 'bg-[#404040] text-[#FAFAFA] hover:bg-[#525252]'
               }`}
             >
               {category}
@@ -82,14 +82,14 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
       </div>
 
       {/* Template Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {filteredTemplates.map((template) => (
           <div
             key={template.id}
-            className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+            className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
               selectedTemplate?.id === template.id
-                ? 'border-blue-500 ring-2 ring-blue-200'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-[#FAFAFA] ring-2 ring-[#737373]'
+                : 'border-[#404040] hover:border-[#525252]'
             }`}
             onClick={() => handleTemplateSelect(template)}
           >
@@ -101,10 +101,10 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
                 loading="lazy"
               />
               {selectedTemplate?.id === template.id && (
-                <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
-                  <div className="bg-blue-600 text-white rounded-full p-2">
+                <div className="absolute inset-0 bg-[#0A0A0A] bg-opacity-50 flex items-center justify-center">
+                  <div className="bg-[#FAFAFA] text-[#0A0A0A] rounded-full p-2">
                     <svg
-                      className="w-6 h-6"
+                      className="w-5 h-5 sm:w-6 sm:h-6"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -120,19 +120,19 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
                 </div>
               )}
             </div>
-            <div className="p-3">
-              <h4 className="font-medium text-gray-800 text-sm truncate">
+            <div className="p-2 sm:p-3">
+              <h4 className="font-medium text-[#FAFAFA] text-xs sm:text-sm truncate">
                 {template.name}
               </h4>
-              <p className="text-xs text-gray-500 mt-1">{template.category}</p>
+              <p className="text-xs text-[#A3A3A3] mt-1">{template.category}</p>
             </div>
           </div>
         ))}
       </div>
 
       {filteredTemplates.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-600">
+        <div className="text-center py-6 sm:py-8">
+          <p className="text-[#A3A3A3] text-sm sm:text-base">
             {selectedCategory
               ? `No templates found in ${selectedCategory} category`
               : 'No templates available'}
