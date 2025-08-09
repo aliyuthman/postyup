@@ -57,8 +57,14 @@ export const useTemplateStore = create<TemplateState>((set, get) => ({
   isLoading: false,
   error: null,
   setTemplates: (templates) => {
-    const categories = [...new Set(templates.map(t => t.category))];
-    set({ templates, categories });
+    // Filter to only show Classic Endorsement for now
+    const filteredTemplates = templates.filter(t => t.name === 'Classic Endorsement');
+    const categories = [...new Set(filteredTemplates.map(t => t.category))];
+    
+    // Auto-select the first (and only) template
+    const selectedTemplate = filteredTemplates.length > 0 ? filteredTemplates[0] : null;
+    
+    set({ templates: filteredTemplates, categories, selectedTemplate });
   },
   setSelectedTemplate: (template) => set({ selectedTemplate: template }),
   setSelectedCategory: (category) => set({ selectedCategory: category }),
