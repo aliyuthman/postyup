@@ -159,7 +159,8 @@ export class PosterService {
           const textY = Math.round((textZone.y / 1080) * size);
           const textWidth = Math.round((textZone.width / 1080) * size);
           const textHeight = Math.round((textZone.height / 1080) * size);
-          const fontSize = Math.round(textZone.fontSize * size); // fontSize is now a percentage
+          const calculatedFontSize = Math.round(textZone.fontSize * size);
+          const fontSize = Math.max(calculatedFontSize, 16); // Minimum 16px for readability
           
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
