@@ -159,7 +159,7 @@ export class PosterService {
           const textY = Math.round((textZone.y / 1080) * size);
           const textWidth = Math.round((textZone.width / 1080) * size);
           const textHeight = Math.round((textZone.height / 1080) * size);
-          const fontSize = Math.round((textZone.fontSize / 1080) * size);
+          const fontSize = Math.round(textZone.fontSize * size); // fontSize is now a percentage
           
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
