@@ -10,10 +10,14 @@ export class TemplateController {
   @ApiOperation({ summary: 'Get all templates' })
   @ApiResponse({ status: 200, description: 'Templates retrieved successfully' })
   async getAllTemplates() {
+    console.log('Get all templates endpoint called');
     try {
+      console.log('About to call getAllTemplates service');
       const templates = await this.templateService.getAllTemplates();
+      console.log('Get all templates service completed, found:', templates.length);
       return { templates };
     } catch (error) {
+      console.error('Error in getAllTemplates controller:', error);
       throw new HttpException(
         'Failed to fetch templates',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -85,10 +89,14 @@ export class TemplateController {
   @ApiOperation({ summary: 'Seed sample templates' })
   @ApiResponse({ status: 200, description: 'Templates seeded successfully' })
   async seedTemplates() {
+    console.log('Seed endpoint called');
     try {
+      console.log('About to call seedSampleTemplates service');
       await this.templateService.seedSampleTemplates();
+      console.log('Seed service completed successfully');
       return { message: 'Sample templates seeded successfully' };
     } catch (error) {
+      console.error('Error in seed controller:', error);
       throw new HttpException(
         'Failed to seed templates',
         HttpStatus.INTERNAL_SERVER_ERROR

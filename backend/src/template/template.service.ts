@@ -39,6 +39,7 @@ export class TemplateService {
   }
 
   async seedSampleTemplates(): Promise<void> {
+    console.log('Starting template seeding...');
     const sampleTemplates = [
       {
         name: 'Classic Endorsement',
@@ -86,16 +87,29 @@ export class TemplateService {
       },
     ];
 
-    for (const template of sampleTemplates) {
-      // Try to update existing template first
-      const existingTemplate = await db.select().from(templates).where(eq(templates.name, template.name));
-      if (existingTemplate.length > 0) {
-        // Update existing template
-        await db.update(templates).set(template).where(eq(templates.name, template.name));
-      } else {
-        // Insert new template
-        await db.insert(templates).values(template);
+    try {
+      for (const template of sampleTemplates) {
+        console.log(`Processing template: ${template.name}`);
+        // Try to update existing template first
+        const existingTemplate = await db.select().from(templates).where(eq(templates.name, template.name));
+        console.log(`Found ${existingTemplate.length} existing templates with name: ${template.name}`);
+        
+        if (existingTemplate.length > 0) {
+          // Update existing template
+          console.log(`Updating existing template: ${template.name}`);
+          await db.update(templates).set(template).where(eq(templates.name, template.name));
+          console.log(`Successfully updated template: ${template.name}`);
+        } else {
+          // Insert new template
+          console.log(`Inserting new template: ${template.name}`);
+          await db.insert(templates).values(template);
+          console.log(`Successfully inserted template: ${template.name}`);
+        }
       }
+      console.log('Template seeding completed successfully');
+    } catch (error) {
+      console.error('Error during template seeding:', error);
+      throw error;
     }
   }
 }
