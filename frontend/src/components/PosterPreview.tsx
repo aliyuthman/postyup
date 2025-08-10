@@ -25,7 +25,7 @@ export default function PosterPreview({
     if (selectedTemplate && canvasRef.current) {
       renderPreview();
     }
-  }, [selectedTemplate, name, title, photo, width, height, renderPreview]);
+  }, [selectedTemplate, name, title, photo, width, height]);
 
   const renderPreview = useCallback(async () => {
     if (!selectedTemplate || !canvasRef.current) return;
@@ -64,11 +64,11 @@ export default function PosterPreview({
           userImg.src = photo.url!;
         });
 
-        // Calculate photo position and size (based on 1080x1080 final size)
-        const photoX = (photoZone.x / 1080) * width;
-        const photoY = (photoZone.y / 1080) * height;
-        const photoWidth = (photoZone.width / 1080) * width;
-        const photoHeight = (photoZone.height / 1080) * height;
+        // Calculate photo position and size (based on 2000x2000 final size)
+        const photoX = (photoZone.x / 2000) * width;
+        const photoY = (photoZone.y / 2000) * height;
+        const photoWidth = (photoZone.width / 2000) * width;
+        const photoHeight = (photoZone.height / 2000) * height;
 
         // Save context for clipping
         ctx.save();
@@ -100,36 +100,49 @@ export default function PosterPreview({
   }, [selectedTemplate, name, title, photo, width, height]);
 
   // Adaptive text rendering system
-  const renderAdaptiveText = (
+  const renderAdaptiveText = useCallback((
     ctx: CanvasRenderingContext2D,
     content: { name: string; title: string },
     canvasSize: { width: number; height: number }
   ) => {
     if (!content.name || !content.title) return;
     
-    // Define text area at bottom of poster (like in the reference image)
-    const textAreaMargin = canvasSize.width * 0.05; // 5% margin
+    // Define text area above the photo (positioned at bottom left)
+    const textAreaMargin = (100 / 2000) * canvasSize.width; // Left margin matching backend
     const textAreaWidth = canvasSize.width - (textAreaMargin * 2);
-    const textAreaBottom = canvasSize.height - (canvasSize.height * 0.15); // 15% from bottom
+    // Photo is at Y: 1607, so position text above it
+    const photoY = (1607 / 2000) * canvasSize.height;
+    const textAreaBottom = photoY - (40 / 2000) * canvasSize.height; // 40px gap above photo
     
-    // Smart font sizing based on text length and canvas size
-    const nameFontSize = calculateSmartFontSize(content.name, textAreaWidth, canvasSize.width, 'name', ctx);
-    const roleFontSize = calculateSmartFontSize(content.title, textAreaWidth, canvasSize.width, 'role', ctx);
+    // Use exact Photoshop specifications for name text
+    // 14pt at 300 DPI = 58.33px, scaled for canvas size
+    const nameFontSize = (58.33 / 2000) * canvasSize.width;
+    // 16pt line height at 300 DPI = 66.67px, scaled for canvas size  
+    const nameLineHeight = (66.67 / 2000) * canvasSize.width;
     
-    // Name styling (bold, prominent)
-    ctx.font = `bold ${nameFontSize}px 'Inter', Arial, sans-serif`;
+    // Use exact Photoshop specifications for role text
+    // 12pt at 300 DPI = 50px, scaled for canvas size
+    const roleFontSize = (50 / 2000) * canvasSize.width;
+    // 14pt line height at 300 DPI = 58.33px, scaled for canvas size
+    const roleLineHeight = (58.33 / 2000) * canvasSize.width;
+    
+    // Name styling with exact specifications (Inter, 700 weight)
+    ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
     ctx.fillStyle = '#1a1a1a';
     ctx.textAlign = 'left';
+    // Character tracking -50 (approximately -0.05em)
+    ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
     
     // Intelligent text wrapping for name
     const nameLines = intelligentWrapText(ctx, content.name, textAreaWidth);
-    const nameLineHeight = nameFontSize * 1.2;
     const nameTotalHeight = nameLines.length * nameLineHeight;
     
-    // Role styling (regular weight)
+    // Role styling with exact specifications (Inter, 400 weight, #605e5e color)
     ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
+    ctx.fillStyle = '#605e5e';
+    ctx.letterSpacing = `${-0.025 * roleFontSize}px`; // Character tracking -25
+    
     const roleLines = intelligentWrapText(ctx, content.title, textAreaWidth);
-    const roleLineHeight = roleFontSize * 1.3;
     const roleTotalHeight = roleLines.length * roleLineHeight;
     
     // Dynamic spacing between name and role
@@ -141,9 +154,10 @@ export default function PosterPreview({
     // Position text block at bottom
     const textStartY = textAreaBottom - totalTextHeight;
     
-    // Render name
-    ctx.font = `bold ${nameFontSize}px 'Inter', Arial, sans-serif`;
+    // Render name with exact specifications
+    ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
     ctx.fillStyle = '#1a1a1a';
+    ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
     let currentY = textStartY;
     
     nameLines.forEach(line => {
@@ -154,15 +168,16 @@ export default function PosterPreview({
     // Add spacing
     currentY += nameToRoleSpacing;
     
-    // Render role
+    // Render role with exact specifications
     ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
-    ctx.fillStyle = '#4a4a4a';
+    ctx.fillStyle = '#605e5e';
+    ctx.letterSpacing = `${-0.025 * roleFontSize}px`; // Character tracking -25
     
     roleLines.forEach(line => {
       ctx.fillText(line, textAreaMargin, currentY);
       currentY += roleLineHeight;
     });
-  };
+  }, []);
   // Smart font size calculation
   const calculateSmartFontSize = (
     text: string,

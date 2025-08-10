@@ -205,7 +205,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold text-[#FAFAFA] mb-2">Creating Your Poster</h3>
                 <p className="text-[#A3A3A3] text-sm mb-4 leading-relaxed">
-                  We&apos;re processing your photo and generating a high-quality 1080×1080 poster. This usually takes 15-30 seconds.
+                  We&apos;re processing your photo and generating a high-quality 2000×2000 poster. This usually takes 15-30 seconds.
                 </p>
                 <div className="bg-[#262626] rounded-lg p-3">
                   <div className="flex items-center justify-center gap-2 text-xs text-[#737373]">
