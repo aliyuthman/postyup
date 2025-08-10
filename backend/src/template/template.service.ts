@@ -59,6 +59,14 @@ export class TemplateService {
           textZones: [
             {
               type: 'name',
+              // Four-point coordinate system for precise text boundaries
+              coordinates: {
+                topLeft: { x: 282.07, y: 893.34 },
+                topRight: { x: 652.76, y: 893.34 }, // 282.07 + 370.69
+                bottomRight: { x: 652.76, y: 1013.34 }, // 893.34 + 120
+                bottomLeft: { x: 282.07, y: 1013.34 }
+              },
+              // Legacy support (will be deprecated)
               x: 282.07,
               y: 893.34,
               width: 370.69,
@@ -72,6 +80,14 @@ export class TemplateService {
             },
             {
               type: 'title',
+              // Four-point coordinate system for precise text boundaries
+              coordinates: {
+                topLeft: { x: 284.23, y: 967.97 },
+                topRight: { x: 652.76, y: 967.97 }, // 284.23 + 368.53
+                bottomRight: { x: 652.76, y: 1067.97 }, // 967.97 + 100
+                bottomLeft: { x: 284.23, y: 1067.97 }
+              },
+              // Legacy support (will be deprecated)
               x: 284.23,
               y: 967.97,
               width: 368.53,

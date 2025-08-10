@@ -187,6 +187,31 @@ export class PosterService {
             textContent = textContent.toUpperCase();
           }
 
+          // Use four-point coordinates if available, fallback to legacy x/y/width/height
+          let textBounds;
+          if (textZone.coordinates) {
+            // Enhanced four-point coordinate system
+            textBounds = {
+              topLeft: {
+                x: Math.round((textZone.coordinates.topLeft.x / 1080) * size),
+                y: Math.round((textZone.coordinates.topLeft.y / 1080) * size)
+              },
+              topRight: {
+                x: Math.round((textZone.coordinates.topRight.x / 1080) * size),
+                y: Math.round((textZone.coordinates.topRight.y / 1080) * size)
+              },
+              bottomRight: {
+                x: Math.round((textZone.coordinates.bottomRight.x / 1080) * size),
+                y: Math.round((textZone.coordinates.bottomRight.y / 1080) * size)
+              },
+              bottomLeft: {
+                x: Math.round((textZone.coordinates.bottomLeft.x / 1080) * size),
+                y: Math.round((textZone.coordinates.bottomLeft.y / 1080) * size)
+              }
+            };
+          }
+          
+          // Legacy coordinate system (for backward compatibility)
           const textX = Math.round((textZone.x / 1080) * size);
           let textY = Math.round((textZone.y / 1080) * size);
           const textWidth = Math.round((textZone.width / 1080) * size);
@@ -209,47 +234,97 @@ export class PosterService {
           console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
 
           try {
-            // Create canvas for text rendering using native Canvas API
-            const canvas = createCanvas(textWidth, textHeight);
-            const ctx = canvas.getContext('2d');
+            let textImageBuffer;
+            let overlayPosition;
 
-            // Set font properties
-            const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
-            ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
-            ctx.fillStyle = textZone.color;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-
-            // Simple text wrapping
-            const words = textContent.split(' ');
-            let line = '';
-            let y = 0;
-            const lineHeight = fontSize * 1.2;
-
-            for (let i = 0; i < words.length; i++) {
-              const testLine = line + words[i] + ' ';
-              const metrics = ctx.measureText(testLine);
+            if (textBounds) {
+              // Enhanced four-point coordinate rendering
+              const boundsWidth = textBounds.topRight.x - textBounds.topLeft.x;
+              const boundsHeight = textBounds.bottomLeft.y - textBounds.topLeft.y;
               
-              if (metrics.width > textWidth && i > 0) {
-                ctx.fillText(line, 0, y);
-                line = words[i] + ' ';
-                y += lineHeight;
-              } else {
-                line = testLine;
+              console.log(`Using four-point coordinates: width=${boundsWidth}, height=${boundsHeight}`);
+              console.log(`Bounds: TL(${textBounds.topLeft.x},${textBounds.topLeft.y}) TR(${textBounds.topRight.x},${textBounds.topRight.y}) BR(${textBounds.bottomRight.x},${textBounds.bottomRight.y}) BL(${textBounds.bottomLeft.x},${textBounds.bottomLeft.y})`);
+              
+              const canvas = createCanvas(boundsWidth, boundsHeight);
+              const ctx = canvas.getContext('2d');
+
+              // Set font properties
+              const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
+              ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
+              ctx.fillStyle = textZone.color;
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'top';
+
+              // Advanced text wrapping within precise bounds
+              const words = textContent.split(' ');
+              let line = '';
+              let y = 0;
+              const lineHeight = fontSize * 1.2;
+
+              for (let i = 0; i < words.length; i++) {
+                const testLine = line + words[i] + ' ';
+                const metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > boundsWidth && i > 0) {
+                  ctx.fillText(line, 0, y);
+                  line = words[i] + ' ';
+                  y += lineHeight;
+                } else {
+                  line = testLine;
+                }
               }
+              ctx.fillText(line, 0, y);
+
+              textImageBuffer = canvas.toBuffer('image/png');
+              overlayPosition = {
+                input: textImageBuffer,
+                top: textBounds.topLeft.y,
+                left: textBounds.topLeft.x,
+              };
+              
+              console.log(`Added precise four-point text overlay at position ${textBounds.topLeft.x}, ${textBounds.topLeft.y}`);
+            } else {
+              // Legacy coordinate system fallback
+              const canvas = createCanvas(textWidth, textHeight);
+              const ctx = canvas.getContext('2d');
+
+              const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
+              ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
+              ctx.fillStyle = textZone.color;
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'top';
+
+              const words = textContent.split(' ');
+              let line = '';
+              let y = 0;
+              const lineHeight = fontSize * 1.2;
+
+              for (let i = 0; i < words.length; i++) {
+                const testLine = line + words[i] + ' ';
+                const metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > textWidth && i > 0) {
+                  ctx.fillText(line, 0, y);
+                  line = words[i] + ' ';
+                  y += lineHeight;
+                } else {
+                  line = testLine;
+                }
+              }
+              ctx.fillText(line, 0, y);
+
+              textImageBuffer = canvas.toBuffer('image/png');
+              overlayPosition = {
+                input: textImageBuffer,
+                top: textY,
+                left: textX,
+              };
+              
+              console.log(`Added legacy text overlay at position ${textX}, ${textY}`);
             }
-            ctx.fillText(line, 0, y);
 
-            // Get buffer
-            const textImageBuffer = canvas.toBuffer('image/png');
-
-            overlays.push({
-              input: textImageBuffer,
-              top: textY,
-              left: textX,
-            });
+            overlays.push(overlayPosition);
             
-            console.log(`Added Canvas text overlay at position ${textX}, ${textY}`);
           } catch (textError) {
             console.error('Error creating Canvas text overlay:', textError);
             
