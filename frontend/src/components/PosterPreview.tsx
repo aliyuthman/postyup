@@ -25,7 +25,7 @@ export default function PosterPreview({
     if (selectedTemplate && canvasRef.current) {
       renderPreview();
     }
-  }, [selectedTemplate, name, title, photo]);
+  }, [selectedTemplate, name, title, photo, width, height]);
 
   const renderPreview = async () => {
     if (!selectedTemplate || !canvasRef.current) return;
@@ -97,14 +97,16 @@ export default function PosterPreview({
       if (nameZone && name) {
         const nameContent = nameZone.textTransform === 'uppercase' ? name.toUpperCase() : name;
         const nameWidth = (nameZone.width / 1080) * width;
-        const nameFontSize = Math.max(nameZone.fontSize * width, 12);
+        // Increase base font size significantly - multiply by 1.4x for larger text
+        const baseFontSize = nameZone.fontSize * width * 1.4;
+        const nameFontSize = Math.max(baseFontSize, 18); // Minimum 18px instead of 12px
         
         // Create temporary context to measure
         ctx.save();
         const fontWeight = nameZone.fontWeight || 'normal';
         ctx.font = `${fontWeight} ${nameFontSize}px ${nameZone.fontFamily}`;
         
-        const lines = wrapText(ctx, nameContent, nameWidth);
+        const lines = smartWrapText(ctx, nameContent, nameWidth);
         nameLineCount = lines.length;
         ctx.restore();
       }
@@ -122,17 +124,32 @@ export default function PosterPreview({
 
         const textX = (textZone.x / 1080) * width;
         let textY = (textZone.y / 1080) * height;
-        const fontSize = Math.max(textZone.fontSize * width, 12); // fontSize is now percentage, with minimum 12px
+        
+        // Increase font sizes significantly
+        let baseFontSize;
+        if (textZone.type === 'name') {
+          // Name gets 1.4x larger font
+          baseFontSize = textZone.fontSize * width * 1.4;
+        } else {
+          // Title gets 1.2x larger font
+          baseFontSize = textZone.fontSize * width * 1.2;
+        }
+        const fontSize = Math.max(baseFontSize, textZone.type === 'name' ? 18 : 16);
 
-        // Adjust vertical spacing for title based on name line count
+        // Dynamic vertical spacing for title based on name line count
         if (textZone.type === 'title') {
-          const baseSpacing = (74.63 / 1080) * height; // Original spacing between name and title
-          const reducedSpacing = (40 / 1080) * height; // Closer spacing for single-line names
+          const baseSpacing = (74.63 / 1080) * height;
+          const tightSpacing = (25 / 1080) * height; // Much tighter for single-line
+          const mediumSpacing = (45 / 1080) * height; // Medium for 2-line names
           
           if (nameLineCount === 1) {
-            // Single line name - bring title closer
-            textY = textY - (baseSpacing - reducedSpacing);
+            // Single line name - bring title much closer
+            textY = textY - (baseSpacing - tightSpacing);
+          } else if (nameLineCount === 2) {
+            // Two line name - medium spacing
+            textY = textY - (baseSpacing - mediumSpacing);
           }
+          // For 3+ lines, keep original spacing
         }
 
         // Build font string with weight
@@ -141,12 +158,14 @@ export default function PosterPreview({
         ctx.fillStyle = textZone.color;
         ctx.textAlign = textZone.textAlign as CanvasTextAlign;
 
-        // Handle text wrapping if needed
+        // Handle text wrapping with smart breaking
         const maxWidth = (textZone.width / 1080) * width;
-        const lines = wrapText(ctx, textContent, maxWidth);
+        const lines = textZone.type === 'name' ? smartWrapText(ctx, textContent, maxWidth) : wrapText(ctx, textContent, maxWidth);
         
         lines.forEach((line, index) => {
-          const lineHeight = fontSize * 1.3; // Improved line height for better readability
+          // Dynamic line height based on text type and size
+          const lineHeightMultiplier = textZone.type === 'name' ? 1.25 : 1.3;
+          const lineHeight = fontSize * lineHeightMultiplier;
           const lineY = textY + (index * lineHeight);
           ctx.fillText(line, textX, lineY);
         });
@@ -157,6 +176,84 @@ export default function PosterPreview({
     }
   };
 
+  // Smart text wrapping for names - tries to break at better points
+  const smartWrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
+    const words = text.split(' ');
+    if (words.length === 1) {
+      // Single word - use regular wrapping
+      return wrapText(ctx, text, maxWidth);
+    }
+    
+    const lines: string[] = [];
+    let currentLine = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const metrics = ctx.measureText(testLine);
+      
+      if (metrics.width > maxWidth && currentLine) {
+        // Try to balance lines better for names
+        if (words.length === 2) {
+          // For 2 words, check if first word alone is too long
+          const firstWordMetrics = ctx.measureText(words[0]);
+          if (firstWordMetrics.width < maxWidth * 0.7) {
+            // First word is reasonable, put each word on its own line
+            lines.push(words[0]);
+            lines.push(words[1]);
+            return lines;
+          }
+        }
+        
+        lines.push(currentLine);
+        currentLine = word;
+        
+        // Handle overly long single words
+        const singleWordMetrics = ctx.measureText(word);
+        if (singleWordMetrics.width > maxWidth) {
+          const brokenWord = breakLongWord(ctx, word, maxWidth);
+          if (brokenWord.length > 1) {
+            lines.push(...brokenWord.slice(0, -1));
+            currentLine = brokenWord[brokenWord.length - 1];
+          }
+        }
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines;
+  };
+
+  // Helper function to break long words
+  const breakLongWord = (ctx: CanvasRenderingContext2D, word: string, maxWidth: number): string[] => {
+    const pieces: string[] = [];
+    let currentPiece = '';
+    
+    for (let i = 0; i < word.length; i++) {
+      const testPiece = currentPiece + word[i];
+      const metrics = ctx.measureText(testPiece);
+      
+      if (metrics.width > maxWidth && currentPiece) {
+        pieces.push(currentPiece);
+        currentPiece = word[i];
+      } else {
+        currentPiece = testPiece;
+      }
+    }
+    
+    if (currentPiece) {
+      pieces.push(currentPiece);
+    }
+    
+    return pieces;
+  };
+
+  // Regular text wrapping for titles and other text
   const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
     const words = text.split(' ');
     const lines: string[] = [];
@@ -170,21 +267,14 @@ export default function PosterPreview({
         lines.push(currentLine);
         currentLine = word;
         
-        // Check if single word is too long, break it character by character
+        // Check if single word is too long, break it
         const singleWordMetrics = ctx.measureText(word);
         if (singleWordMetrics.width > maxWidth) {
-          let partialWord = '';
-          for (let i = 0; i < word.length; i++) {
-            const testChar = partialWord + word[i];
-            const charMetrics = ctx.measureText(testChar);
-            if (charMetrics.width > maxWidth && partialWord) {
-              lines.push(partialWord);
-              partialWord = word[i];
-            } else {
-              partialWord = testChar;
-            }
+          const brokenWord = breakLongWord(ctx, word, maxWidth);
+          if (brokenWord.length > 1) {
+            lines.push(...brokenWord.slice(0, -1));
+            currentLine = brokenWord[brokenWord.length - 1];
           }
-          currentLine = partialWord;
         }
       } else {
         currentLine = testLine;
