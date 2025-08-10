@@ -201,15 +201,17 @@ export default function PosterPreview({
     const titleTotalHeight = titleLines.length * titleLineHeight;
     ctx.restore();
     
-    // Dynamic spacing between name and title
-    let nameToTitleSpacing;
+    // Dynamic spacing between name and title based on name line count
+    let nameToTitleSpacing: number;
     if (nameLines.length === 1) {
-      nameToTitleSpacing = 15; // Tight spacing for single-line names
+      nameToTitleSpacing = (15 / 1080) * canvasSize.width; // Tight spacing for single-line names
     } else if (nameLines.length === 2) {
-      nameToTitleSpacing = 25; // Medium spacing for two-line names
+      nameToTitleSpacing = (25 / 1080) * canvasSize.width; // Medium spacing for two-line names
     } else {
-      nameToTitleSpacing = 35; // Generous spacing for multi-line names
+      nameToTitleSpacing = (35 / 1080) * canvasSize.width; // Generous spacing for multi-line names
     }
+    
+    console.log(`Enhanced frontend spacing: name has ${nameLines.length} lines, using ${nameToTitleSpacing}px spacing`);
     
     // Calculate total text block height
     const totalTextHeight = nameTotalHeight + nameToTitleSpacing + titleTotalHeight;

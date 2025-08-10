@@ -140,189 +140,48 @@ export class PosterService {
         });
       }
 
-      // Add text overlays with dynamic vertical spacing
+      // Add text overlays with enhanced dynamic vertical spacing
       if (template.layoutConfig.textZones?.length > 0) {
-        console.log(`Processing ${template.layoutConfig.textZones.length} text zones with dynamic spacing`);
+        console.log(`Processing ${template.layoutConfig.textZones.length} text zones with enhanced dynamic spacing`);
         
-        // First pass: calculate name text dimensions for dynamic spacing
-        let nameLineCount = 1;
-        const nameZone = template.layoutConfig.textZones.find(zone => zone.type === 'name');
-        if (nameZone && supporterData.name) {
-          const nameContent = nameZone.textTransform === 'uppercase' ? supporterData.name.toUpperCase() : supporterData.name;
-          const nameWidth = Math.round((nameZone.width / 1080) * size);
-          const nameFontSize = Math.max(nameZone.fontSize * size, 16);
-          
-          // Create temporary canvas to measure text
-          const tempCanvas = createCanvas(nameWidth, 100);
-          const tempCtx = tempCanvas.getContext('2d');
-          const fontWeight = nameZone.fontWeight === 'bold' ? 'bold' : 'normal';
-          tempCtx.font = `${fontWeight} ${nameFontSize}px Arial, sans-serif`;
-          
-          // Calculate how many lines the name will take
-          const words = nameContent.split(' ');
-          let line = '';
-          for (let i = 0; i < words.length; i++) {
-            const testLine = line + words[i] + ' ';
-            const metrics = tempCtx.measureText(testLine);
-            
-            if (metrics.width > nameWidth && i > 0) {
-              nameLineCount++;
-              line = words[i] + ' ';
-            } else {
-              line = testLine;
-            }
-          }
-        }
+        // Enhanced text layout calculation system
+        const textLayoutData = this.calculateTextLayout(
+          template.layoutConfig.textZones,
+          template.layoutConfig.photoZones?.[0],
+          supporterData,
+          size
+        );
         
-        console.log(`Name will use ${nameLineCount} lines`);
-        
-        for (const textZone of template.layoutConfig.textZones) {
-          let textContent = textZone.type === 'name' ? supporterData.name : supporterData.title;
-          if (!textContent) continue;
-
-          console.log(`Processing text: "${textContent}" of type: ${textZone.type}`);
-
-          // Apply text transformations
-          if (textZone.textTransform === 'uppercase') {
-            textContent = textContent.toUpperCase();
-          }
-
-          // Use four-point coordinates if available, fallback to legacy x/y/width/height
-          let textBounds;
-          if (textZone.coordinates) {
-            // Enhanced four-point coordinate system
-            textBounds = {
-              topLeft: {
-                x: Math.round((textZone.coordinates.topLeft.x / 1080) * size),
-                y: Math.round((textZone.coordinates.topLeft.y / 1080) * size)
-              },
-              topRight: {
-                x: Math.round((textZone.coordinates.topRight.x / 1080) * size),
-                y: Math.round((textZone.coordinates.topRight.y / 1080) * size)
-              },
-              bottomRight: {
-                x: Math.round((textZone.coordinates.bottomRight.x / 1080) * size),
-                y: Math.round((textZone.coordinates.bottomRight.y / 1080) * size)
-              },
-              bottomLeft: {
-                x: Math.round((textZone.coordinates.bottomLeft.x / 1080) * size),
-                y: Math.round((textZone.coordinates.bottomLeft.y / 1080) * size)
-              }
-            };
-          }
-          
-          // Legacy coordinate system (for backward compatibility)
-          const textX = Math.round((textZone.x / 1080) * size);
-          let textY = Math.round((textZone.y / 1080) * size);
-          const textWidth = Math.round((textZone.width / 1080) * size);
-          const textHeight = Math.round((textZone.height / 1080) * size);
-          const calculatedFontSize = Math.round(textZone.fontSize * size);
-          const fontSize = Math.max(calculatedFontSize, 16); // Minimum 16px for readability
-          
-          // Adjust vertical spacing for title based on name line count
-          if (textZone.type === 'title') {
-            const baseSpacing = Math.round((74.63 / 1080) * size); // Original spacing between name and title (967.97 - 893.34)
-            const reducedSpacing = Math.round((40 / 1080) * size); // Closer spacing for single-line names
-            
-            if (nameLineCount === 1) {
-              // Single line name - bring title closer
-              textY = textY - (baseSpacing - reducedSpacing);
-              console.log(`Adjusting title position: reducing gap by ${baseSpacing - reducedSpacing}px for single-line name`);
-            }
-          }
-          
-          console.log(`Text position: x=${textX}, y=${textY}, width=${textWidth}, fontSize=${fontSize}`);
+        for (const layoutData of textLayoutData) {
+          console.log(`Processing enhanced text layout: "${layoutData.textContent}" of type: ${layoutData.type}`);
+          console.log(`Text position: x=${layoutData.coordinates.topLeft.x}, y=${layoutData.coordinates.topLeft.y}, width=${layoutData.width}, fontSize=${layoutData.fontSize}`);
 
           try {
-            let textImageBuffer;
-            let overlayPosition;
+            // Use enhanced layout coordinates
+            const canvas = createCanvas(layoutData.width, layoutData.height);
+            const ctx = canvas.getContext('2d');
 
-            if (textBounds) {
-              // Enhanced four-point coordinate rendering
-              const boundsWidth = textBounds.topRight.x - textBounds.topLeft.x;
-              const boundsHeight = textBounds.bottomLeft.y - textBounds.topLeft.y;
-              
-              console.log(`Using four-point coordinates: width=${boundsWidth}, height=${boundsHeight}`);
-              console.log(`Bounds: TL(${textBounds.topLeft.x},${textBounds.topLeft.y}) TR(${textBounds.topRight.x},${textBounds.topRight.y}) BR(${textBounds.bottomRight.x},${textBounds.bottomRight.y}) BL(${textBounds.bottomLeft.x},${textBounds.bottomLeft.y})`);
-              
-              const canvas = createCanvas(boundsWidth, boundsHeight);
-              const ctx = canvas.getContext('2d');
+            // Set font properties
+            ctx.font = `${layoutData.fontWeight} ${layoutData.fontSize}px Arial, sans-serif`;
+            ctx.fillStyle = layoutData.color;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
 
-              // Set font properties
-              const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
-              ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
-              ctx.fillStyle = textZone.color;
-              ctx.textAlign = 'left';
-              ctx.textBaseline = 'top';
-
-              // Advanced text wrapping within precise bounds
-              const words = textContent.split(' ');
-              let line = '';
-              let y = 0;
-              const lineHeight = fontSize * 1.2;
-
-              for (let i = 0; i < words.length; i++) {
-                const testLine = line + words[i] + ' ';
-                const metrics = ctx.measureText(testLine);
-                
-                if (metrics.width > boundsWidth && i > 0) {
-                  ctx.fillText(line, 0, y);
-                  line = words[i] + ' ';
-                  y += lineHeight;
-                } else {
-                  line = testLine;
-                }
-              }
-              ctx.fillText(line, 0, y);
-
-              textImageBuffer = canvas.toBuffer('image/png');
-              overlayPosition = {
-                input: textImageBuffer,
-                top: textBounds.topLeft.y,
-                left: textBounds.topLeft.x,
-              };
-              
-              console.log(`Added precise four-point text overlay at position ${textBounds.topLeft.x}, ${textBounds.topLeft.y}`);
-            } else {
-              // Legacy coordinate system fallback
-              const canvas = createCanvas(textWidth, textHeight);
-              const ctx = canvas.getContext('2d');
-
-              const fontWeight = textZone.fontWeight === 'bold' ? 'bold' : 'normal';
-              ctx.font = `${fontWeight} ${fontSize}px Arial, sans-serif`;
-              ctx.fillStyle = textZone.color;
-              ctx.textAlign = 'left';
-              ctx.textBaseline = 'top';
-
-              const words = textContent.split(' ');
-              let line = '';
-              let y = 0;
-              const lineHeight = fontSize * 1.2;
-
-              for (let i = 0; i < words.length; i++) {
-                const testLine = line + words[i] + ' ';
-                const metrics = ctx.measureText(testLine);
-                
-                if (metrics.width > textWidth && i > 0) {
-                  ctx.fillText(line, 0, y);
-                  line = words[i] + ' ';
-                  y += lineHeight;
-                } else {
-                  line = testLine;
-                }
-              }
-              ctx.fillText(line, 0, y);
-
-              textImageBuffer = canvas.toBuffer('image/png');
-              overlayPosition = {
-                input: textImageBuffer,
-                top: textY,
-                left: textX,
-              };
-              
-              console.log(`Added legacy text overlay at position ${textX}, ${textY}`);
+            // Render pre-calculated lines with precise spacing
+            let currentY = 0;
+            for (const line of layoutData.lines) {
+              ctx.fillText(line, 0, currentY);
+              currentY += layoutData.lineHeight;
             }
 
+            const textImageBuffer = canvas.toBuffer('image/png');
+            const overlayPosition = {
+              input: textImageBuffer,
+              top: layoutData.coordinates.topLeft.y,
+              left: layoutData.coordinates.topLeft.x,
+            };
+            
+            console.log(`Added enhanced text overlay at position ${layoutData.coordinates.topLeft.x}, ${layoutData.coordinates.topLeft.y}`);
             overlays.push(overlayPosition);
             
           } catch (textError) {
@@ -331,8 +190,8 @@ export class PosterService {
             // Fallback: create a colored rectangle to show positioning works
             const fallbackRect = await sharp({
               create: {
-                width: textWidth,
-                height: textHeight,
+                width: layoutData.width,
+                height: layoutData.height,
                 channels: 4,
                 background: { r: 0, g: 255, b: 0, alpha: 0.8 } // Green rectangle as fallback
               }
@@ -340,11 +199,11 @@ export class PosterService {
 
             overlays.push({
               input: fallbackRect,
-              top: textY,
-              left: textX,
+              top: layoutData.coordinates.topLeft.y,
+              left: layoutData.coordinates.topLeft.x,
             });
             
-            console.log(`Added fallback rectangle at position ${textX}, ${textY}`);
+            console.log(`Added fallback rectangle at position ${layoutData.coordinates.topLeft.x}, ${layoutData.coordinates.topLeft.y}`);
           }
         }
       }
@@ -358,5 +217,262 @@ export class PosterService {
     } catch (error) {
       throw new Error(`Poster composition failed: ${error.message}`);
     }
+  }
+
+  // Enhanced text layout calculation matching frontend logic
+  private calculateTextLayout(
+    textZones: Array<{
+      type: 'name' | 'title';
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      fontSize: number;
+      fontFamily: string;
+      fontWeight?: string;
+      color: string;
+      textAlign: string;
+      textTransform?: string;
+      coordinates?: {
+        topLeft: { x: number; y: number };
+        topRight: { x: number; y: number };
+        bottomRight: { x: number; y: number };
+        bottomLeft: { x: number; y: number };
+      };
+    }>,
+    photoZone: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    },
+    content: { name: string; title: string },
+    canvasSize: number
+  ) {
+    const nameZone = textZones.find(zone => zone.type === 'name');
+    const titleZone = textZones.find(zone => zone.type === 'title');
+    
+    if (!nameZone || !titleZone || !content.name || !content.title) {
+      return [];
+    }
+
+    // Scale photo zone to canvas size
+    const scaledPhotoZone = {
+      x: (photoZone.x / 1080) * canvasSize,
+      y: (photoZone.y / 1080) * canvasSize,
+      width: (photoZone.width / 1080) * canvasSize,
+      height: (photoZone.height / 1080) * canvasSize,
+      centerY: ((photoZone.y + photoZone.height / 2) / 1080) * canvasSize
+    };
+    
+    // Define text area coordinates (left side layout)
+    const textAreaLeft = (50 / 1080) * canvasSize; // Left margin
+    const textAreaRight = scaledPhotoZone.x - (30 / 1080) * canvasSize; // 30px gap before photo
+    const textAreaWidth = textAreaRight - textAreaLeft;
+    
+    // Calculate name text properties
+    const nameContent = nameZone.textTransform === 'uppercase' ? content.name.toUpperCase() : content.name;
+    const nameBaseFontSize = nameZone.fontSize * canvasSize * 1.4; // 1.4x larger
+    const nameFontSize = Math.max(nameBaseFontSize, 18);
+    const nameWeight = nameZone.fontWeight === 'bold' ? 'bold' : (nameZone.fontWeight || 'normal');
+    
+    // Create temporary canvas to measure name text
+    const tempCanvas = createCanvas(textAreaWidth, 200);
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.font = `${nameWeight} ${nameFontSize}px Arial, sans-serif`;
+    
+    const nameLines = this.smartWrapText(tempCtx, nameContent, textAreaWidth);
+    const nameLineHeight = nameFontSize * 1.25;
+    const nameTotalHeight = nameLines.length * nameLineHeight;
+    
+    // Calculate title text properties
+    const titleContent = content.title;
+    const titleBaseFontSize = titleZone.fontSize * canvasSize * 1.2; // 1.2x larger
+    const titleFontSize = Math.max(titleBaseFontSize, 16);
+    const titleWeight = titleZone.fontWeight === 'bold' ? 'bold' : (titleZone.fontWeight || 'normal');
+    
+    // Measure title text
+    tempCtx.font = `${titleWeight} ${titleFontSize}px Arial, sans-serif`;
+    const titleLines = this.wrapText(tempCtx, titleContent, textAreaWidth);
+    const titleLineHeight = titleFontSize * 1.3;
+    const titleTotalHeight = titleLines.length * titleLineHeight;
+    
+    // Dynamic spacing between name and title based on name line count
+    let nameToTitleSpacing: number;
+    if (nameLines.length === 1) {
+      nameToTitleSpacing = (15 / 1080) * canvasSize; // Tight spacing for single-line names
+    } else if (nameLines.length === 2) {
+      nameToTitleSpacing = (25 / 1080) * canvasSize; // Medium spacing for two-line names
+    } else {
+      nameToTitleSpacing = (35 / 1080) * canvasSize; // Generous spacing for multi-line names
+    }
+    
+    console.log(`Dynamic spacing calculation: name has ${nameLines.length} lines, using ${nameToTitleSpacing}px spacing`);
+    
+    // Calculate total text block height
+    const totalTextHeight = nameTotalHeight + nameToTitleSpacing + titleTotalHeight;
+    
+    // Center the text block vertically with the photo zone
+    const textBlockStartY = scaledPhotoZone.centerY - (totalTextHeight / 2);
+    
+    // Name layout data
+    const nameTopY = textBlockStartY;
+    const nameBottomY = nameTopY + nameTotalHeight;
+    const nameLayoutData = {
+      type: 'name' as const,
+      textContent: nameContent,
+      coordinates: {
+        topLeft: { x: Math.round(textAreaLeft), y: Math.round(nameTopY) },
+        topRight: { x: Math.round(textAreaRight), y: Math.round(nameTopY) },
+        bottomRight: { x: Math.round(textAreaRight), y: Math.round(nameBottomY) },
+        bottomLeft: { x: Math.round(textAreaLeft), y: Math.round(nameBottomY) }
+      },
+      width: Math.round(textAreaWidth),
+      height: Math.round(nameTotalHeight),
+      fontSize: Math.round(nameFontSize),
+      fontWeight: nameWeight,
+      fontFamily: nameZone.fontFamily,
+      color: nameZone.color,
+      textAlign: 'left',
+      lines: nameLines,
+      lineHeight: nameLineHeight
+    };
+    
+    // Title layout data
+    const titleTopY = nameBottomY + nameToTitleSpacing;
+    const titleBottomY = titleTopY + titleTotalHeight;
+    const titleLayoutData = {
+      type: 'title' as const,
+      textContent: titleContent,
+      coordinates: {
+        topLeft: { x: Math.round(textAreaLeft), y: Math.round(titleTopY) },
+        topRight: { x: Math.round(textAreaRight), y: Math.round(titleTopY) },
+        bottomRight: { x: Math.round(textAreaRight), y: Math.round(titleBottomY) },
+        bottomLeft: { x: Math.round(textAreaLeft), y: Math.round(titleBottomY) }
+      },
+      width: Math.round(textAreaWidth),
+      height: Math.round(titleTotalHeight),
+      fontSize: Math.round(titleFontSize),
+      fontWeight: titleWeight,
+      fontFamily: titleZone.fontFamily,
+      color: titleZone.color,
+      textAlign: 'left',
+      lines: titleLines,
+      lineHeight: titleLineHeight
+    };
+    
+    return [nameLayoutData, titleLayoutData];
+  }
+
+  // Smart text wrapping for names - tries to break at better points
+  private smartWrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+    const words = text.split(' ');
+    if (words.length === 1) {
+      // Single word - use regular wrapping
+      return this.wrapText(ctx, text, maxWidth);
+    }
+    
+    const lines: string[] = [];
+    let currentLine = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const metrics = ctx.measureText(testLine);
+      
+      if (metrics.width > maxWidth && currentLine) {
+        // Try to balance lines better for names
+        if (words.length === 2) {
+          // For 2 words, check if first word alone is too long
+          const firstWordMetrics = ctx.measureText(words[0]);
+          if (firstWordMetrics.width < maxWidth * 0.7) {
+            // First word is reasonable, put each word on its own line
+            lines.push(words[0]);
+            lines.push(words[1]);
+            return lines;
+          }
+        }
+        
+        lines.push(currentLine);
+        currentLine = word;
+        
+        // Handle overly long single words
+        const singleWordMetrics = ctx.measureText(word);
+        if (singleWordMetrics.width > maxWidth) {
+          const brokenWord = this.breakLongWord(ctx, word, maxWidth);
+          if (brokenWord.length > 1) {
+            lines.push(...brokenWord.slice(0, -1));
+            currentLine = brokenWord[brokenWord.length - 1];
+          }
+        }
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines;
+  }
+
+  // Helper function to break long words
+  private breakLongWord(ctx: CanvasRenderingContext2D, word: string, maxWidth: number): string[] {
+    const pieces: string[] = [];
+    let currentPiece = '';
+    
+    for (let i = 0; i < word.length; i++) {
+      const testPiece = currentPiece + word[i];
+      const metrics = ctx.measureText(testPiece);
+      
+      if (metrics.width > maxWidth && currentPiece) {
+        pieces.push(currentPiece);
+        currentPiece = word[i];
+      } else {
+        currentPiece = testPiece;
+      }
+    }
+    
+    if (currentPiece) {
+      pieces.push(currentPiece);
+    }
+    
+    return pieces;
+  }
+
+  // Regular text wrapping for titles and other text
+  private wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+
+    for (const word of words) {
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const metrics = ctx.measureText(testLine);
+      
+      if (metrics.width > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+        
+        // Check if single word is too long, break it
+        const singleWordMetrics = ctx.measureText(word);
+        if (singleWordMetrics.width > maxWidth) {
+          const brokenWord = this.breakLongWord(ctx, word, maxWidth);
+          if (brokenWord.length > 1) {
+            lines.push(...brokenWord.slice(0, -1));
+            currentLine = brokenWord[brokenWord.length - 1];
+          }
+        }
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines;
   }
 }
