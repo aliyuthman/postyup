@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Step = 'details' | 'photo' | 'template' | 'preview';
+export type Step = 'template' | 'photo' | 'details' | 'preview';
 
 export interface FormErrors {
   name?: string;
@@ -24,12 +24,12 @@ export interface SessionState {
   reset: () => void;
 }
 
-const steps: Step[] = ['details', 'photo', 'template', 'preview'];
+const steps: Step[] = ['template', 'photo', 'details', 'preview'];
 
 export const useSessionStore = create<SessionState>()(
   persist(
     (set, get) => ({
-      currentStep: 'details',
+      currentStep: 'template',
       sessionId: '',
       formErrors: {},
       isLoading: false,
@@ -52,7 +52,7 @@ export const useSessionStore = create<SessionState>()(
         }
       },
       reset: () => set({
-        currentStep: 'details',
+        currentStep: 'template',
         sessionId: '',
         formErrors: {},
         isLoading: false,

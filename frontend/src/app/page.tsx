@@ -175,12 +175,12 @@ export default function Home() {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 'details':
-        return name.trim().length >= 2 && title.trim().length >= 2;
-      case 'photo':
-        return photo.url && !showCropper;
       case 'template':
         return useTemplateStore.getState().selectedTemplate;
+      case 'photo':
+        return photo.url && !showCropper;
+      case 'details':
+        return name.trim().length >= 2 && title.trim().length >= 2;
       case 'preview':
         return false; // No next step from preview
       default:
@@ -190,18 +190,18 @@ export default function Home() {
 
   const getValidationMessage = () => {
     switch (currentStep) {
-      case 'details':
-        if (!name.trim()) return 'Please enter your name';
-        if (name.trim().length < 2) return 'Name must be at least 2 characters';
-        if (!title.trim()) return 'Please enter your title/role';
-        if (title.trim().length < 2) return 'Title must be at least 2 characters';
+      case 'template':
+        if (!useTemplateStore.getState().selectedTemplate) return 'Please select a template';
         return '';
       case 'photo':
         if (!photo.url) return 'Please upload a photo';
         if (showCropper) return 'Please complete photo cropping';
         return '';
-      case 'template':
-        if (!useTemplateStore.getState().selectedTemplate) return 'Please select a template';
+      case 'details':
+        if (!name.trim()) return 'Please enter your name';
+        if (name.trim().length < 2) return 'Name must be at least 2 characters';
+        if (!title.trim()) return 'Please enter your title/role';
+        if (title.trim().length < 2) return 'Title must be at least 2 characters';
         return '';
       case 'preview':
         return ''; // No validation needed on final step
@@ -257,8 +257,8 @@ export default function Home() {
       <div className="bg-[#171717] border-b border-[#262626]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
-            {['Details', 'Photo', 'Template', 'Preview'].map((step, index) => {
-              const stepNames: string[] = ['details', 'photo', 'template', 'preview'];
+            {['Template', 'Photo', 'Details', 'Preview'].map((step, index) => {
+              const stepNames: string[] = ['template', 'photo', 'details', 'preview'];
               const isActive = stepNames[index] === currentStep;
               const isCompleted = stepNames.indexOf(currentStep) > index;
               
@@ -288,11 +288,40 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {currentStep === 'template' && (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Choose your template</h2>
+              <p className="text-[#A3A3A3] text-sm sm:text-base">Select a poster design that fits your campaign</p>
+            </div>
+            
+            <TemplateGallery onTemplateSelect={handleTemplateSelect} />
+          </div>
+        )}
+
+        {currentStep === 'photo' && (
+          <div className="max-w-md mx-auto space-y-4 sm:space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Add your photo</h2>
+              <p className="text-[#A3A3A3] text-sm sm:text-base">Upload a clear photo of yourself</p>
+            </div>
+            
+            {!showCropper ? (
+              <PhotoUpload onPhotoSelected={handlePhotoSelected} />
+            ) : (
+              <PhotoCropper 
+                imageSrc={photo.url!} 
+                onCropComplete={handleCropComplete}
+              />
+            )}
+          </div>
+        )}
+
         {currentStep === 'details' && (
           <div className="max-w-md mx-auto space-y-4 sm:space-y-6">
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Tell us about yourself</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Enter your details to get started</p>
+              <p className="text-[#A3A3A3] text-sm sm:text-base">Enter your details to complete your poster</p>
             </div>
             
             <div className="space-y-4">
@@ -322,35 +351,6 @@ export default function Home() {
                 />
               </div>
             </div>
-          </div>
-        )}
-
-        {currentStep === 'photo' && (
-          <div className="max-w-md mx-auto space-y-4 sm:space-y-6">
-            <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Add your photo</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Upload a clear photo of yourself</p>
-            </div>
-            
-            {!showCropper ? (
-              <PhotoUpload onPhotoSelected={handlePhotoSelected} />
-            ) : (
-              <PhotoCropper 
-                imageSrc={photo.url!} 
-                onCropComplete={handleCropComplete}
-              />
-            )}
-          </div>
-        )}
-
-        {currentStep === 'template' && (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Choose your template</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Select a poster design that fits your campaign</p>
-            </div>
-            
-            <TemplateGallery onTemplateSelect={handleTemplateSelect} />
           </div>
         )}
 
@@ -393,7 +393,7 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row justify-between items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[#262626] space-y-3 sm:space-y-0">
           <button
             onClick={previousStep}
-            disabled={currentStep === 'details'}
+            disabled={currentStep === 'template'}
             className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
