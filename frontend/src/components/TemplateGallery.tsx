@@ -137,11 +137,11 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
       </div>
 
       {/* Template Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
         {filteredTemplates.map((template) => (
           <div
             key={template.id}
-            className={`group relative cursor-pointer rounded-2xl overflow-hidden transition-all duration-300 transform hover:scale-105 ${
+            className={`group relative cursor-pointer rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-300 transform hover:scale-105 ${
               selectedTemplate?.id === template.id
                 ? 'ring-2 ring-[#FAFAFA] shadow-2xl shadow-white/10'
                 : 'hover:shadow-xl hover:shadow-black/20'
@@ -149,7 +149,7 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
             onClick={() => handleTemplateSelect(template)}
           >
             {/* Template Image Container */}
-            <div className="aspect-square relative bg-[#262626] rounded-2xl overflow-hidden">
+            <div className="aspect-square relative bg-[#262626] rounded-xl sm:rounded-2xl overflow-hidden">
               {/* Loading State */}
               {imageLoadingStates[template.id] && (
                 <div className="absolute inset-0 flex items-center justify-center bg-[#262626]">
@@ -206,23 +206,23 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
             </div>
 
             {/* Template Info */}
-            <div className="p-3 sm:p-4 bg-[#171717] rounded-b-2xl">
+            <div className="p-2 sm:p-3 bg-[#171717] rounded-b-xl sm:rounded-b-2xl">
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-semibold text-[#FAFAFA] text-sm sm:text-base truncate">
+                  <h4 className="font-semibold text-[#FAFAFA] text-xs sm:text-sm truncate">
                     {template.name}
                   </h4>
-                  <div className="flex items-center gap-1 mt-1">
-                    <svg className="w-3 h-3 text-[#737373]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#737373]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     <p className="text-xs text-[#737373]">{template.category}</p>
                   </div>
                 </div>
                 {selectedTemplate?.id === template.id && (
-                  <div className="ml-2 flex-shrink-0">
-                    <div className="w-6 h-6 bg-[#FAFAFA] rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-[#0A0A0A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="ml-1 sm:ml-2 flex-shrink-0">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-[#FAFAFA] rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#0A0A0A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
