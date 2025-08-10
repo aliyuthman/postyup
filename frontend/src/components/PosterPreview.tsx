@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { useSupporterStore } from '@/stores/supporterStore';
-import { useTemplateStore } from '@/stores/templateStore';
+import { useTemplateStore, TextCoordinates } from '@/stores/templateStore';
 
 interface PosterPreviewProps {
   width?: number;
@@ -91,89 +91,202 @@ export default function PosterPreview({
         ctx.restore();
       }
 
-      // Calculate name line count for dynamic spacing
-      let nameLineCount = 1;
-      const nameZone = selectedTemplate.layoutConfig.textZones.find(zone => zone.type === 'name');
-      if (nameZone && name) {
-        const nameContent = nameZone.textTransform === 'uppercase' ? name.toUpperCase() : name;
-        const nameWidth = (nameZone.width / 1080) * width;
-        // Increase base font size significantly - multiply by 1.4x for larger text
-        const baseFontSize = nameZone.fontSize * width * 1.4;
-        const nameFontSize = Math.max(baseFontSize, 18); // Minimum 18px instead of 12px
-        
-        // Create temporary context to measure
-        ctx.save();
-        const fontWeight = nameZone.fontWeight || 'normal';
-        ctx.font = `${fontWeight} ${nameFontSize}px ${nameZone.fontFamily}`;
-        
-        const lines = smartWrapText(ctx, nameContent, nameWidth);
-        nameLineCount = lines.length;
-        ctx.restore();
-      }
+      // Get photo zone for vertical alignment reference
+      const photoZone = selectedTemplate.layoutConfig.photoZones[0];
+      if (!photoZone) return;
+      
+      // Calculate text positioning with four-coordinate system
+      const textLayout = calculateTextLayout(
+        selectedTemplate.layoutConfig.textZones, 
+        photoZone, 
+        { name, title }, 
+        { width, height }, 
+        ctx
+      );
 
-      // Draw text overlays with dynamic spacing
-      selectedTemplate.layoutConfig.textZones.forEach((textZone) => {
-        let textContent = textZone.type === 'name' ? name : title;
-        if (!textContent) return;
-
-        // Apply text transformations
-        const extendedTextZone = textZone as typeof textZone & { textTransform?: string; fontWeight?: string };
-        if (extendedTextZone.textTransform === 'uppercase') {
-          textContent = textContent.toUpperCase();
-        }
-
-        const textX = (textZone.x / 1080) * width;
-        let textY = (textZone.y / 1080) * height;
-        
-        // Increase font sizes significantly
-        let baseFontSize;
-        if (textZone.type === 'name') {
-          // Name gets 1.4x larger font
-          baseFontSize = textZone.fontSize * width * 1.4;
-        } else {
-          // Title gets 1.2x larger font
-          baseFontSize = textZone.fontSize * width * 1.2;
-        }
-        const fontSize = Math.max(baseFontSize, textZone.type === 'name' ? 18 : 16);
-
-        // Dynamic vertical spacing for title based on name line count
-        if (textZone.type === 'title') {
-          const baseSpacing = (74.63 / 1080) * height;
-          const tightSpacing = (25 / 1080) * height; // Much tighter for single-line
-          const mediumSpacing = (45 / 1080) * height; // Medium for 2-line names
-          
-          if (nameLineCount === 1) {
-            // Single line name - bring title much closer
-            textY = textY - (baseSpacing - tightSpacing);
-          } else if (nameLineCount === 2) {
-            // Two line name - medium spacing
-            textY = textY - (baseSpacing - mediumSpacing);
-          }
-          // For 3+ lines, keep original spacing
-        }
-
-        // Build font string with weight
-        const fontWeight = extendedTextZone.fontWeight || 'normal';
-        ctx.font = `${fontWeight} ${fontSize}px ${textZone.fontFamily}`;
-        ctx.fillStyle = textZone.color;
-        ctx.textAlign = textZone.textAlign as CanvasTextAlign;
-
-        // Handle text wrapping with smart breaking
-        const maxWidth = (textZone.width / 1080) * width;
-        const lines = textZone.type === 'name' ? smartWrapText(ctx, textContent, maxWidth) : wrapText(ctx, textContent, maxWidth);
-        
-        lines.forEach((line, index) => {
-          // Dynamic line height based on text type and size
-          const lineHeightMultiplier = textZone.type === 'name' ? 1.25 : 1.3;
-          const lineHeight = fontSize * lineHeightMultiplier;
-          const lineY = textY + (index * lineHeight);
-          ctx.fillText(line, textX, lineY);
-        });
-      });
+      // Render text using calculated layout with four-coordinate system
+      renderTextWithCoordinates(ctx, textLayout, { name, title });
 
     } catch (error) {
       console.error('Error rendering preview:', error);
     }
+  };
+
+  // Four-coordinate text layout calculation system
+  interface TextLayoutData {
+    type: 'name' | 'title';
+    coordinates: TextCoordinates;
+    fontSize: number;
+    fontWeight: string;
+    fontFamily: string;
+    color: string;
+    textAlign: string;
+    textTransform?: string;
+    lines: string[];
+    lineHeight: number;
+  }
+
+  const calculateTextLayout = (
+    textZones: Array<{
+      type: 'name' | 'title';
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      fontSize: number;
+      fontFamily: string;
+      fontWeight?: string;
+      color: string;
+      textAlign: string;
+      textTransform?: string;
+    }>, 
+    photoZone: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      borderRadius?: number;
+    }, 
+    content: {name: string, title: string}, 
+    canvasSize: {width: number, height: number}, 
+    ctx: CanvasRenderingContext2D
+  ): TextLayoutData[] => {
+    
+    // Scale photoZone to canvas size
+    const scaledPhotoZone = {
+      x: (photoZone.x / 1080) * canvasSize.width,
+      y: (photoZone.y / 1080) * canvasSize.height,
+      width: (photoZone.width / 1080) * canvasSize.width,
+      height: (photoZone.height / 1080) * canvasSize.height,
+      centerY: ((photoZone.y + photoZone.height / 2) / 1080) * canvasSize.height
+    };
+    
+    const nameZone = textZones.find(zone => zone.type === 'name');
+    const titleZone = textZones.find(zone => zone.type === 'title');
+    
+    if (!nameZone || !titleZone || !content.name || !content.title) {
+      return [];
+    }
+    
+    // Define text area coordinates (left side layout)
+    const textAreaLeft = 50; // Left margin
+    const textAreaRight = scaledPhotoZone.x - 30; // 30px gap before photo
+    const textAreaWidth = textAreaRight - textAreaLeft;
+    
+    // Calculate name text properties
+    const nameContent = nameZone.textTransform === 'uppercase' ? content.name.toUpperCase() : content.name;
+    const nameBaseFontSize = nameZone.fontSize * canvasSize.width * 1.4; // 1.4x larger
+    const nameFontSize = Math.max(nameBaseFontSize, 18);
+    const nameWeight = nameZone.fontWeight || 'normal';
+    
+    // Measure name text
+    ctx.save();
+    ctx.font = `${nameWeight} ${nameFontSize}px ${nameZone.fontFamily}`;
+    const nameLines = smartWrapText(ctx, nameContent, textAreaWidth);
+    const nameLineHeight = nameFontSize * 1.25;
+    const nameTotalHeight = nameLines.length * nameLineHeight;
+    ctx.restore();
+    
+    // Calculate title text properties  
+    const titleContent = content.title;
+    const titleBaseFontSize = titleZone.fontSize * canvasSize.width * 1.2; // 1.2x larger
+    const titleFontSize = Math.max(titleBaseFontSize, 16);
+    const titleWeight = titleZone.fontWeight || 'normal';
+    
+    // Measure title text
+    ctx.save();
+    ctx.font = `${titleWeight} ${titleFontSize}px ${titleZone.fontFamily}`;
+    const titleLines = wrapText(ctx, titleContent, textAreaWidth);
+    const titleLineHeight = titleFontSize * 1.3;
+    const titleTotalHeight = titleLines.length * titleLineHeight;
+    ctx.restore();
+    
+    // Dynamic spacing between name and title
+    let nameToTitleSpacing;
+    if (nameLines.length === 1) {
+      nameToTitleSpacing = 15; // Tight spacing for single-line names
+    } else if (nameLines.length === 2) {
+      nameToTitleSpacing = 25; // Medium spacing for two-line names
+    } else {
+      nameToTitleSpacing = 35; // Generous spacing for multi-line names
+    }
+    
+    // Calculate total text block height
+    const totalTextHeight = nameTotalHeight + nameToTitleSpacing + titleTotalHeight;
+    
+    // Center the text block vertically with the photo zone
+    const textBlockStartY = scaledPhotoZone.centerY - (totalTextHeight / 2);
+    
+    // Name coordinates (four-point system)
+    const nameTopY = textBlockStartY;
+    const nameBottomY = nameTopY + nameTotalHeight;
+    const nameCoordinates: TextCoordinates = {
+      topLeft: { x: textAreaLeft, y: nameTopY },
+      topRight: { x: textAreaRight, y: nameTopY },
+      bottomRight: { x: textAreaRight, y: nameBottomY },
+      bottomLeft: { x: textAreaLeft, y: nameBottomY }
+    };
+    
+    // Title coordinates (four-point system)
+    const titleTopY = nameBottomY + nameToTitleSpacing;
+    const titleBottomY = titleTopY + titleTotalHeight;
+    const titleCoordinates: TextCoordinates = {
+      topLeft: { x: textAreaLeft, y: titleTopY },
+      topRight: { x: textAreaRight, y: titleTopY },
+      bottomRight: { x: textAreaRight, y: titleBottomY },
+      bottomLeft: { x: textAreaLeft, y: titleBottomY }
+    };
+    
+    return [
+      {
+        type: 'name',
+        coordinates: nameCoordinates,
+        fontSize: nameFontSize,
+        fontWeight: nameWeight,
+        fontFamily: nameZone.fontFamily,
+        color: nameZone.color,
+        textAlign: 'left', // Force left alignment for left-side layout
+        textTransform: nameZone.textTransform,
+        lines: nameLines,
+        lineHeight: nameLineHeight
+      },
+      {
+        type: 'title',
+        coordinates: titleCoordinates,
+        fontSize: titleFontSize,
+        fontWeight: titleWeight,
+        fontFamily: titleZone.fontFamily,
+        color: titleZone.color,
+        textAlign: 'left', // Force left alignment for left-side layout
+        lines: titleLines,
+        lineHeight: titleLineHeight
+      }
+    ];
+  };
+  
+  const renderTextWithCoordinates = (
+    ctx: CanvasRenderingContext2D, 
+    textLayout: TextLayoutData[], 
+    content: {name: string, title: string}
+  ) => {
+    textLayout.forEach(layout => {
+      const textContent = layout.type === 'name' ? content.name : content.title;
+      if (!textContent) return;
+      
+      // Set font properties
+      ctx.font = `${layout.fontWeight} ${layout.fontSize}px ${layout.fontFamily}`;
+      ctx.fillStyle = layout.color;
+      ctx.textAlign = layout.textAlign as CanvasTextAlign;
+      
+      // Render each line at calculated position
+      const startX = layout.coordinates.topLeft.x;
+      let currentY = layout.coordinates.topLeft.y + layout.fontSize; // Add fontSize for baseline
+      
+      layout.lines.forEach(line => {
+        ctx.fillText(line, startX, currentY);
+        currentY += layout.lineHeight;
+      });
+    });
   };
 
   // Smart text wrapping for names - tries to break at better points

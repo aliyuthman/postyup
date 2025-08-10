@@ -97,10 +97,10 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
         {/* Category Filter */}
         {categories.length > 0 && (
           <div className="mb-4">
-            <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mb-2">
               <button
                 onClick={() => handleCategorySelect(null)}
-                className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full sm:rounded-xl text-xs sm:text-sm font-medium transition-all min-h-[36px] sm:min-h-[44px] ${
+                className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full sm:rounded-xl text-xs sm:text-sm font-medium transition-all min-h-[36px] sm:min-h-[44px] flex-shrink-0 ${
                   selectedCategory === null
                     ? 'bg-[#FAFAFA] text-[#0A0A0A] shadow-lg'
                     : 'bg-[#262626] text-[#FAFAFA] hover:bg-[#404040] border border-[#404040]'
@@ -119,7 +119,7 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
                 <button
                   key={category}
                   onClick={() => handleCategorySelect(category)}
-                  className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full sm:rounded-xl text-xs sm:text-sm font-medium transition-all min-h-[36px] sm:min-h-[44px] ${
+                  className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full sm:rounded-xl text-xs sm:text-sm font-medium transition-all min-h-[36px] sm:min-h-[44px] flex-shrink-0 ${
                     selectedCategory === category
                       ? 'bg-[#FAFAFA] text-[#0A0A0A] shadow-lg'
                       : 'bg-[#262626] text-[#FAFAFA] hover:bg-[#404040] border border-[#404040]'
