@@ -140,71 +140,20 @@ export class PosterService {
         });
       }
 
-      // Add text overlays with enhanced dynamic vertical spacing
-      if (template.layoutConfig.textZones?.length > 0) {
-        console.log(`Processing ${template.layoutConfig.textZones.length} text zones with enhanced dynamic spacing`);
+      // Add text overlays using exact Photoshop specifications
+      if (supporterData.name && supporterData.title && template.layoutConfig.photoZones?.length > 0) {
+        console.log('Rendering text with exact Photoshop specifications');
         
-        // Enhanced text layout calculation system
-        const textLayoutData = this.calculateTextLayout(
-          template.layoutConfig.textZones,
-          template.layoutConfig.photoZones?.[0],
+        const photoZone = template.layoutConfig.photoZones[0];
+        const textOverlay = await this.createTextOverlayWithPhotoshopSpecs(
           supporterData,
+          photoZone,
           size
         );
         
-        for (const layoutData of textLayoutData) {
-          console.log(`Processing enhanced text layout: "${layoutData.textContent}" of type: ${layoutData.type}`);
-          console.log(`Text position: x=${layoutData.coordinates.topLeft.x}, y=${layoutData.coordinates.topLeft.y}, width=${layoutData.width}, fontSize=${layoutData.fontSize}`);
-
-          try {
-            // Use enhanced layout coordinates
-            const canvas = createCanvas(layoutData.width, layoutData.height);
-            const ctx = canvas.getContext('2d');
-
-            // Set font properties with Inter font family
-            ctx.font = `${layoutData.fontWeight} ${layoutData.fontSize}px 'Inter', Arial, sans-serif`;
-            ctx.fillStyle = layoutData.color;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-
-            // Render pre-calculated lines with precise spacing
-            let currentY = 0;
-            for (const line of layoutData.lines) {
-              ctx.fillText(line, 0, currentY);
-              currentY += layoutData.lineHeight;
-            }
-
-            const textImageBuffer = canvas.toBuffer('image/png');
-            const overlayPosition = {
-              input: textImageBuffer,
-              top: layoutData.coordinates.topLeft.y,
-              left: layoutData.coordinates.topLeft.x,
-            };
-            
-            console.log(`Added enhanced text overlay at position ${layoutData.coordinates.topLeft.x}, ${layoutData.coordinates.topLeft.y}`);
-            overlays.push(overlayPosition);
-            
-          } catch (textError) {
-            console.error('Error creating Canvas text overlay:', textError);
-            
-            // Fallback: create a colored rectangle to show positioning works
-            const fallbackRect = await sharp({
-              create: {
-                width: layoutData.width,
-                height: layoutData.height,
-                channels: 4,
-                background: { r: 0, g: 255, b: 0, alpha: 0.8 } // Green rectangle as fallback
-              }
-            }).png().toBuffer();
-
-            overlays.push({
-              input: fallbackRect,
-              top: layoutData.coordinates.topLeft.y,
-              left: layoutData.coordinates.topLeft.x,
-            });
-            
-            console.log(`Added fallback rectangle at position ${layoutData.coordinates.topLeft.x}, ${layoutData.coordinates.topLeft.y}`);
-          }
+        if (textOverlay) {
+          overlays.push(...textOverlay);
+          console.log(`Added text overlays for name and title`);
         }
       }
 
@@ -216,6 +165,105 @@ export class PosterService {
       return await composite.png().toBuffer();
     } catch (error) {
       throw new Error(`Poster composition failed: ${error.message}`);
+    }
+  }
+
+  // Create text overlay with exact Photoshop specifications
+  private async createTextOverlayWithPhotoshopSpecs(
+    content: { name: string; title: string },
+    photoZone: { x: number; y: number; width: number; height: number },
+    canvasSize: number
+  ): Promise<Array<{ input: Buffer; top: number; left: number }> | null> {
+    if (!content.name || !content.title) return null;
+    
+    try {
+      // Scale photo zone to canvas size
+      const scaledPhotoZone = {
+        x: (photoZone.x / 2000) * canvasSize,
+        y: (photoZone.y / 2000) * canvasSize,
+        width: (photoZone.width / 2000) * canvasSize,
+        height: (photoZone.height / 2000) * canvasSize,
+      };
+      
+      // Define text area above the photo
+      const textAreaLeft = (100 / 2000) * canvasSize;
+      const textAreaRight = (1900 / 2000) * canvasSize;
+      const textAreaWidth = textAreaRight - textAreaLeft;
+      
+      // Name text specifications (14pt at 300 DPI = 58.33px)
+      const nameFontSize = (58.33 / 2000) * canvasSize;
+      const nameLineHeight = (66.67 / 2000) * canvasSize; // 16pt at 300 DPI
+      
+      // Title text specifications (12pt at 300 DPI = 50px)
+      const titleFontSize = (50 / 2000) * canvasSize;
+      const titleLineHeight = (58.33 / 2000) * canvasSize; // 14pt at 300 DPI
+      
+      // Create temporary canvas for text measurement
+      const tempCanvas = createCanvas(textAreaWidth, 200);
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // Measure name text
+      tempCtx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
+      const nameLines = this.intelligentWrapText(tempCtx, content.name, textAreaWidth);
+      const nameTotalHeight = nameLines.length * nameLineHeight;
+      
+      // Measure title text  
+      tempCtx.font = `400 ${titleFontSize}px 'Inter', Arial, sans-serif`;
+      const titleLines = this.intelligentWrapText(tempCtx, content.title, textAreaWidth);
+      const titleTotalHeight = titleLines.length * titleLineHeight;
+      
+      // Position text above photo with spacing
+      const textSpacing = (20 / 2000) * canvasSize; // 20px spacing
+      const nameY = scaledPhotoZone.y - nameTotalHeight - titleTotalHeight - textSpacing * 2;
+      const titleY = scaledPhotoZone.y - titleTotalHeight - textSpacing;
+      
+      const overlays = [];
+      
+      // Create name text overlay
+      const nameCanvas = createCanvas(textAreaWidth, nameTotalHeight);
+      const nameCtx = nameCanvas.getContext('2d');
+      nameCtx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
+      nameCtx.fillStyle = '#1a1a1a';
+      nameCtx.textAlign = 'left';
+      nameCtx.textBaseline = 'top';
+      
+      let currentY = 0;
+      nameLines.forEach(line => {
+        nameCtx.fillText(line, 0, currentY);
+        currentY += nameLineHeight;
+      });
+      
+      overlays.push({
+        input: nameCanvas.toBuffer('image/png'),
+        top: Math.round(nameY),
+        left: Math.round(textAreaLeft)
+      });
+      
+      // Create title text overlay
+      const titleCanvas = createCanvas(textAreaWidth, titleTotalHeight);
+      const titleCtx = titleCanvas.getContext('2d');
+      titleCtx.font = `400 ${titleFontSize}px 'Inter', Arial, sans-serif`;
+      titleCtx.fillStyle = '#605e5e';
+      titleCtx.textAlign = 'left';
+      titleCtx.textBaseline = 'top';
+      
+      currentY = 0;
+      titleLines.forEach(line => {
+        titleCtx.fillText(line, 0, currentY);
+        currentY += titleLineHeight;
+      });
+      
+      overlays.push({
+        input: titleCanvas.toBuffer('image/png'),
+        top: Math.round(titleY),
+        left: Math.round(textAreaLeft)
+      });
+      
+      return overlays;
+      
+    } catch (error) {
+      console.error('Error creating text overlay with Photoshop specs:', error);
+      return null;
     }
   }
 
