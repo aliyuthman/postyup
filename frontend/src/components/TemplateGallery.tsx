@@ -219,15 +219,6 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
                     <p className="text-xs text-[#737373]">{template.category}</p>
                   </div>
                 </div>
-                {selectedTemplate?.id === template.id && (
-                  <div className="ml-1 sm:ml-2 flex-shrink-0">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-[#FAFAFA] rounded-full flex items-center justify-center">
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#0A0A0A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
