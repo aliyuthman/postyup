@@ -253,38 +253,40 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Progress Bar */}
-      <div className="bg-[#171717] border-b border-[#262626]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
-            {['Template', 'Photo', 'Details', 'Preview'].map((step, index) => {
-              const stepNames: string[] = ['template', 'photo', 'details', 'preview'];
-              const isActive = stepNames[index] === currentStep;
-              const isCompleted = stepNames.indexOf(currentStep) > index;
-              
-              return (
-                <div key={step} className="flex items-center flex-shrink-0">
-                  <div
-                    className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm font-medium ${
-                      isCompleted
-                        ? 'bg-[#FAFAFA] text-[#0A0A0A]'
-                        : isActive
-                        ? 'bg-[#737373] text-[#FAFAFA]'
-                        : 'bg-[#404040] text-[#A3A3A3]'
-                    }`}
-                  >
-                    {isCompleted ? '✓' : index + 1}
+      {/* Progress Bar - Hide on template step */}
+      {currentStep !== 'template' && (
+        <div className="bg-[#171717] border-b border-[#262626]">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
+              {['Photo', 'Details', 'Preview'].map((step, index) => {
+                const stepNames: string[] = ['photo', 'details', 'preview'];
+                const isActive = stepNames[index] === currentStep;
+                const isCompleted = stepNames.indexOf(currentStep) > index;
+                
+                return (
+                  <div key={step} className="flex items-center flex-shrink-0">
+                    <div
+                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm font-medium ${
+                        isCompleted
+                          ? 'bg-[#FAFAFA] text-[#0A0A0A]'
+                          : isActive
+                          ? 'bg-[#737373] text-[#FAFAFA]'
+                          : 'bg-[#404040] text-[#A3A3A3]'
+                      }`}
+                    >
+                      {isCompleted ? '✓' : index + 1}
+                    </div>
+                    <span className={`ml-1 sm:ml-2 text-xs sm:text-sm ${isActive ? 'font-medium text-[#FAFAFA]' : 'text-[#A3A3A3]'} whitespace-nowrap`}>
+                      {step}
+                    </span>
+                    {index < 2 && <div className="w-4 sm:w-8 h-0.5 bg-[#404040] mx-2 sm:mx-4" />}
                   </div>
-                  <span className={`ml-1 sm:ml-2 text-xs sm:text-sm ${isActive ? 'font-medium text-[#FAFAFA]' : 'text-[#A3A3A3]'} whitespace-nowrap`}>
-                    {step}
-                  </span>
-                  {index < 3 && <div className="w-4 sm:w-8 h-0.5 bg-[#404040] mx-2 sm:mx-4" />}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -372,32 +374,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* Validation Message */}
-        {!canProceed() && getValidationMessage() && (
-          <div className="mt-4 p-3 bg-yellow-900 bg-opacity-50 border border-yellow-600 rounded-xl">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <p className="text-yellow-200 text-sm">{getValidationMessage()}</p>
-            </div>
-          </div>
-        )}
 
-        {/* Navigation */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[#262626] space-y-3 sm:space-y-0">
-          <button
-            onClick={previousStep}
-            disabled={currentStep === 'template'}
-            className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Previous
-          </button>
-          
-          {currentStep === 'preview' && finalPosterUrl ? (
+        {/* Navigation - Only show for preview step */}
+        {currentStep === 'preview' && finalPosterUrl && (
+          <div className="flex justify-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[#262626]">
             <button
               onClick={() => {
                 // Clear poster and restart
@@ -406,26 +386,15 @@ export default function Home() {
                 useSupporterStore.getState().reset();
                 useTemplateStore.getState().setSelectedTemplate(null);
               }}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] transition-colors font-medium min-h-[44px]"
+              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] transition-colors font-medium min-h-[44px]"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               Start Over
             </button>
-          ) : currentStep !== 'preview' ? (
-            <button
-              onClick={nextStep}
-              disabled={!canProceed()}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
-            >
-              Next
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          ) : null}
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );
