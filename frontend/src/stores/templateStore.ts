@@ -57,14 +57,18 @@ export const useTemplateStore = create<TemplateState>((set, get) => ({
   isLoading: false,
   error: null,
   setTemplates: (templates) => {
-    // Filter to only show Classic Endorsement for now
-    const filteredTemplates = templates.filter(t => t.name === 'Classic Endorsement');
-    const categories = [...new Set(filteredTemplates.map(t => t.category))];
+    // Show all templates
+    const filteredTemplates = templates;
     
-    // Auto-select the first (and only) template
+    // Define all available categories (including those that may be empty)
+    const predefinedCategories = ['Endorsement', 'Campaign', 'Event', 'Announcement'];
+    const templateCategories = [...new Set(filteredTemplates.map(t => t.category))];
+    const allCategories = [...new Set([...predefinedCategories, ...templateCategories])];
+    
+    // Auto-select the first template if available
     const selectedTemplate = filteredTemplates.length > 0 ? filteredTemplates[0] : null;
     
-    set({ templates: filteredTemplates, categories, selectedTemplate });
+    set({ templates: filteredTemplates, categories: allCategories, selectedTemplate });
   },
   setSelectedTemplate: (template) => set({ selectedTemplate: template }),
   setSelectedCategory: (category) => set({ selectedCategory: category }),
