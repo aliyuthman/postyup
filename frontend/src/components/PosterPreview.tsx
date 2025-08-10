@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { useSupporterStore } from '@/stores/supporterStore';
-import { useTemplateStore, TextCoordinates } from '@/stores/templateStore';
+import { useTemplateStore } from '@/stores/templateStore';
 
 interface PosterPreviewProps {
   width?: number;
@@ -25,9 +25,9 @@ export default function PosterPreview({
     if (selectedTemplate && canvasRef.current) {
       renderPreview();
     }
-  }, [selectedTemplate, name, title, photo, width, height]);
+  }, [selectedTemplate, name, title, photo, width, height, renderPreview]);
 
-  const renderPreview = async () => {
+  const renderPreview = useCallback(async () => {
     if (!selectedTemplate || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
@@ -91,246 +91,165 @@ export default function PosterPreview({
         ctx.restore();
       }
 
-      // Get photo zone for vertical alignment reference
-      const photoZone = selectedTemplate.layoutConfig.photoZones[0];
-      if (!photoZone) return;
-      
-      // Calculate text positioning with four-coordinate system
-      const textLayout = calculateTextLayout(
-        selectedTemplate.layoutConfig.textZones, 
-        photoZone, 
-        { name, title }, 
-        { width, height }, 
-        ctx
-      );
-
-      // Render text using calculated layout with four-coordinate system
-      renderTextWithCoordinates(ctx, textLayout, { name, title });
+          // Render text using new adaptive system
+      renderAdaptiveText(ctx, { name, title }, { width, height });
 
     } catch (error) {
       console.error('Error rendering preview:', error);
     }
-  };
+  }, [selectedTemplate, name, title, photo, width, height]);
 
-  // Four-coordinate text layout calculation system
-  interface TextLayoutData {
-    type: 'name' | 'title';
-    coordinates: TextCoordinates;
-    fontSize: number;
-    fontWeight: string;
-    fontFamily: string;
-    color: string;
-    textAlign: string;
-    textTransform?: string;
-    lines: string[];
-    lineHeight: number;
-  }
-
-  const calculateTextLayout = (
-    textZones: Array<{
-      type: 'name' | 'title';
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      fontSize: number;
-      fontFamily: string;
-      fontWeight?: string;
-      color: string;
-      textAlign: string;
-      textTransform?: string;
-    }>, 
-    photoZone: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      borderRadius?: number;
-    }, 
-    content: {name: string, title: string}, 
-    canvasSize: {width: number, height: number}, 
-    ctx: CanvasRenderingContext2D
-  ): TextLayoutData[] => {
+  // Adaptive text rendering system
+  const renderAdaptiveText = (
+    ctx: CanvasRenderingContext2D,
+    content: { name: string; title: string },
+    canvasSize: { width: number; height: number }
+  ) => {
+    if (!content.name || !content.title) return;
     
-    // Scale photoZone to canvas size
-    const scaledPhotoZone = {
-      x: (photoZone.x / 1080) * canvasSize.width,
-      y: (photoZone.y / 1080) * canvasSize.height,
-      width: (photoZone.width / 1080) * canvasSize.width,
-      height: (photoZone.height / 1080) * canvasSize.height,
-      centerY: ((photoZone.y + photoZone.height / 2) / 1080) * canvasSize.height
-    };
+    // Define text area at bottom of poster (like in the reference image)
+    const textAreaMargin = canvasSize.width * 0.05; // 5% margin
+    const textAreaWidth = canvasSize.width - (textAreaMargin * 2);
+    const textAreaBottom = canvasSize.height - (canvasSize.height * 0.15); // 15% from bottom
     
-    const nameZone = textZones.find(zone => zone.type === 'name');
-    const titleZone = textZones.find(zone => zone.type === 'title');
+    // Smart font sizing based on text length and canvas size
+    const nameFontSize = calculateSmartFontSize(content.name, textAreaWidth, canvasSize.width, 'name', ctx);
+    const roleFontSize = calculateSmartFontSize(content.title, textAreaWidth, canvasSize.width, 'role', ctx);
     
-    if (!nameZone || !titleZone || !content.name || !content.title) {
-      return [];
-    }
+    // Name styling (bold, prominent)
+    ctx.font = `bold ${nameFontSize}px 'Inter', Arial, sans-serif`;
+    ctx.fillStyle = '#1a1a1a';
+    ctx.textAlign = 'left';
     
-    // Define text area coordinates (left side layout)
-    const textAreaLeft = 50; // Left margin
-    const textAreaRight = scaledPhotoZone.x - 30; // 30px gap before photo
-    const textAreaWidth = textAreaRight - textAreaLeft;
-    
-    // Calculate name text properties
-    const nameContent = nameZone.textTransform === 'uppercase' ? content.name.toUpperCase() : content.name;
-    const nameBaseFontSize = nameZone.fontSize * canvasSize.width * 1.4; // 1.4x larger
-    const nameFontSize = Math.max(nameBaseFontSize, 18);
-    const nameWeight = nameZone.fontWeight || 'normal';
-    
-    // Measure name text
-    ctx.save();
-    ctx.font = `${nameWeight} ${nameFontSize}px ${nameZone.fontFamily}`;
-    const nameLines = smartWrapText(ctx, nameContent, textAreaWidth);
-    const nameLineHeight = nameFontSize * 1.25;
+    // Intelligent text wrapping for name
+    const nameLines = intelligentWrapText(ctx, content.name, textAreaWidth);
+    const nameLineHeight = nameFontSize * 1.2;
     const nameTotalHeight = nameLines.length * nameLineHeight;
-    ctx.restore();
     
-    // Calculate title text properties  
-    const titleContent = content.title;
-    const titleBaseFontSize = titleZone.fontSize * canvasSize.width * 1.2; // 1.2x larger
-    const titleFontSize = Math.max(titleBaseFontSize, 16);
-    const titleWeight = titleZone.fontWeight || 'normal';
+    // Role styling (regular weight)
+    ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
+    const roleLines = intelligentWrapText(ctx, content.title, textAreaWidth);
+    const roleLineHeight = roleFontSize * 1.3;
+    const roleTotalHeight = roleLines.length * roleLineHeight;
     
-    // Measure title text
-    ctx.save();
-    ctx.font = `${titleWeight} ${titleFontSize}px ${titleZone.fontFamily}`;
-    const titleLines = wrapText(ctx, titleContent, textAreaWidth);
-    const titleLineHeight = titleFontSize * 1.3;
-    const titleTotalHeight = titleLines.length * titleLineHeight;
-    ctx.restore();
-    
-    // Dynamic spacing between name and title based on name line count
-    let nameToTitleSpacing: number;
-    if (nameLines.length === 1) {
-      nameToTitleSpacing = (15 / 1080) * canvasSize.width; // Tight spacing for single-line names
-    } else if (nameLines.length === 2) {
-      nameToTitleSpacing = (25 / 1080) * canvasSize.width; // Medium spacing for two-line names
-    } else {
-      nameToTitleSpacing = (35 / 1080) * canvasSize.width; // Generous spacing for multi-line names
-    }
-    
-    console.log(`Enhanced frontend spacing: name has ${nameLines.length} lines, using ${nameToTitleSpacing}px spacing`);
+    // Dynamic spacing between name and role
+    const nameToRoleSpacing = calculateDynamicSpacing(nameLines.length, canvasSize.width);
     
     // Calculate total text block height
-    const totalTextHeight = nameTotalHeight + nameToTitleSpacing + titleTotalHeight;
+    const totalTextHeight = nameTotalHeight + nameToRoleSpacing + roleTotalHeight;
     
-    // Center the text block vertically with the photo zone
-    const textBlockStartY = scaledPhotoZone.centerY - (totalTextHeight / 2);
+    // Position text block at bottom
+    const textStartY = textAreaBottom - totalTextHeight;
     
-    // Name coordinates (four-point system)
-    const nameTopY = textBlockStartY;
-    const nameBottomY = nameTopY + nameTotalHeight;
-    const nameCoordinates: TextCoordinates = {
-      topLeft: { x: textAreaLeft, y: nameTopY },
-      topRight: { x: textAreaRight, y: nameTopY },
-      bottomRight: { x: textAreaRight, y: nameBottomY },
-      bottomLeft: { x: textAreaLeft, y: nameBottomY }
-    };
+    // Render name
+    ctx.font = `bold ${nameFontSize}px 'Inter', Arial, sans-serif`;
+    ctx.fillStyle = '#1a1a1a';
+    let currentY = textStartY;
     
-    // Title coordinates (four-point system)
-    const titleTopY = nameBottomY + nameToTitleSpacing;
-    const titleBottomY = titleTopY + titleTotalHeight;
-    const titleCoordinates: TextCoordinates = {
-      topLeft: { x: textAreaLeft, y: titleTopY },
-      topRight: { x: textAreaRight, y: titleTopY },
-      bottomRight: { x: textAreaRight, y: titleBottomY },
-      bottomLeft: { x: textAreaLeft, y: titleBottomY }
-    };
+    nameLines.forEach(line => {
+      ctx.fillText(line, textAreaMargin, currentY);
+      currentY += nameLineHeight;
+    });
     
-    return [
-      {
-        type: 'name',
-        coordinates: nameCoordinates,
-        fontSize: nameFontSize,
-        fontWeight: nameWeight,
-        fontFamily: nameZone.fontFamily,
-        color: nameZone.color,
-        textAlign: 'left', // Force left alignment for left-side layout
-        textTransform: nameZone.textTransform,
-        lines: nameLines,
-        lineHeight: nameLineHeight
-      },
-      {
-        type: 'title',
-        coordinates: titleCoordinates,
-        fontSize: titleFontSize,
-        fontWeight: titleWeight,
-        fontFamily: titleZone.fontFamily,
-        color: titleZone.color,
-        textAlign: 'left', // Force left alignment for left-side layout
-        lines: titleLines,
-        lineHeight: titleLineHeight
-      }
-    ];
-  };
-  
-  const renderTextWithCoordinates = (
-    ctx: CanvasRenderingContext2D, 
-    textLayout: TextLayoutData[], 
-    content: {name: string, title: string}
-  ) => {
-    textLayout.forEach(layout => {
-      const textContent = layout.type === 'name' ? content.name : content.title;
-      if (!textContent) return;
-      
-      // Set font properties
-      ctx.font = `${layout.fontWeight} ${layout.fontSize}px ${layout.fontFamily}`;
-      ctx.fillStyle = layout.color;
-      ctx.textAlign = layout.textAlign as CanvasTextAlign;
-      
-      // Render each line at calculated position
-      const startX = layout.coordinates.topLeft.x;
-      let currentY = layout.coordinates.topLeft.y + layout.fontSize; // Add fontSize for baseline
-      
-      layout.lines.forEach(line => {
-        ctx.fillText(line, startX, currentY);
-        currentY += layout.lineHeight;
-      });
+    // Add spacing
+    currentY += nameToRoleSpacing;
+    
+    // Render role
+    ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
+    ctx.fillStyle = '#4a4a4a';
+    
+    roleLines.forEach(line => {
+      ctx.fillText(line, textAreaMargin, currentY);
+      currentY += roleLineHeight;
     });
   };
-
-  // Smart text wrapping for names - tries to break at better points
-  const smartWrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
+  // Smart font size calculation
+  const calculateSmartFontSize = (
+    text: string,
+    maxWidth: number,
+    canvasWidth: number,
+    type: 'name' | 'role',
+    ctx: CanvasRenderingContext2D
+  ): number => {
+    const baseSizes = {
+      name: Math.max(canvasWidth * 0.04, 24), // 4% of canvas width, min 24px
+      role: Math.max(canvasWidth * 0.025, 16)  // 2.5% of canvas width, min 16px
+    };
+    
+    let fontSize = baseSizes[type];
+    const maxSize = baseSizes[type] * 1.5;
+    const minSize = baseSizes[type] * 0.7;
+    
+    // Test if text fits at base size
+    ctx.save();
+    ctx.font = `${type === 'name' ? 'bold' : '400'} ${fontSize}px 'Inter', Arial, sans-serif`;
+    
     const words = text.split(' ');
-    if (words.length === 1) {
-      // Single word - use regular wrapping
-      return wrapText(ctx, text, maxWidth);
+    const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, '');
+    
+    // If longest word doesn't fit, reduce font size
+    while (fontSize > minSize && ctx.measureText(longestWord).width > maxWidth) {
+      fontSize *= 0.9;
+      ctx.font = `${type === 'name' ? 'bold' : '400'} ${fontSize}px 'Inter', Arial, sans-serif`;
     }
     
+    // If text is short, allow larger font up to max
+    if (text.length < 20 && fontSize < maxSize) {
+      fontSize = Math.min(maxSize, fontSize * 1.2);
+    }
+    
+    ctx.restore();
+    return Math.round(fontSize);
+  };
+
+  // Intelligent text wrapping with visual balance
+  const intelligentWrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
+    const words = text.split(' ');
+    
+    // Single word - check if it needs breaking
+    if (words.length === 1) {
+      const wordWidth = ctx.measureText(text).width;
+      if (wordWidth <= maxWidth) return [text];
+      return breakLongWord(ctx, text, maxWidth);
+    }
+    
+    // For names, try to balance line lengths for better visual appearance
+    if (words.length === 2) {
+      const fullWidth = ctx.measureText(text).width;
+      const firstWord = ctx.measureText(words[0]).width;
+      const secondWord = ctx.measureText(words[1]).width;
+      
+      // If full text fits, use single line
+      if (fullWidth <= maxWidth) {
+        return [text];
+      }
+      
+      // If both words fit individually and aren't too unbalanced, split
+      if (firstWord <= maxWidth && secondWord <= maxWidth) {
+        const ratio = Math.max(firstWord, secondWord) / Math.min(firstWord, secondWord);
+        if (ratio < 3) { // Don't split if one word is 3x longer
+          return [words[0], words[1]];
+        }
+      }
+    }
+    
+    // Standard wrapping with balance optimization
     const lines: string[] = [];
     let currentLine = '';
     
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
+    for (const word of words) {
       const testLine = currentLine + (currentLine ? ' ' : '') + word;
-      const metrics = ctx.measureText(testLine);
+      const testWidth = ctx.measureText(testLine).width;
       
-      if (metrics.width > maxWidth && currentLine) {
-        // Try to balance lines better for names
-        if (words.length === 2) {
-          // For 2 words, check if first word alone is too long
-          const firstWordMetrics = ctx.measureText(words[0]);
-          if (firstWordMetrics.width < maxWidth * 0.7) {
-            // First word is reasonable, put each word on its own line
-            lines.push(words[0]);
-            lines.push(words[1]);
-            return lines;
-          }
-        }
-        
+      if (testWidth > maxWidth && currentLine) {
         lines.push(currentLine);
         currentLine = word;
         
-        // Handle overly long single words
-        const singleWordMetrics = ctx.measureText(word);
-        if (singleWordMetrics.width > maxWidth) {
-          const brokenWord = breakLongWord(ctx, word, maxWidth);
-          if (brokenWord.length > 1) {
-            lines.push(...brokenWord.slice(0, -1));
-            currentLine = brokenWord[brokenWord.length - 1];
-          }
+        // Check if single word is too long
+        if (ctx.measureText(word).width > maxWidth) {
+          const brokenParts = breakLongWord(ctx, word, maxWidth);
+          lines.push(...brokenParts.slice(0, -1));
+          currentLine = brokenParts[brokenParts.length - 1] || '';
         }
       } else {
         currentLine = testLine;
@@ -368,39 +287,18 @@ export default function PosterPreview({
     return pieces;
   };
 
-  // Regular text wrapping for titles and other text
-  const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
-    const words = text.split(' ');
-    const lines: string[] = [];
-    let currentLine = '';
-
-    for (const word of words) {
-      const testLine = currentLine + (currentLine ? ' ' : '') + word;
-      const metrics = ctx.measureText(testLine);
-      
-      if (metrics.width > maxWidth && currentLine) {
-        lines.push(currentLine);
-        currentLine = word;
-        
-        // Check if single word is too long, break it
-        const singleWordMetrics = ctx.measureText(word);
-        if (singleWordMetrics.width > maxWidth) {
-          const brokenWord = breakLongWord(ctx, word, maxWidth);
-          if (brokenWord.length > 1) {
-            lines.push(...brokenWord.slice(0, -1));
-            currentLine = brokenWord[brokenWord.length - 1];
-          }
-        }
-      } else {
-        currentLine = testLine;
-      }
-    }
+  // Dynamic spacing calculation
+  const calculateDynamicSpacing = (nameLineCount: number, canvasWidth: number): number => {
+    const baseSpacing = canvasWidth * 0.02; // 2% of canvas width
     
-    if (currentLine) {
-      lines.push(currentLine);
-    }
+    // More spacing for multi-line names to avoid crowding
+    const spacingMultiplier = {
+      1: 1,     // Standard spacing for single-line names
+      2: 1.3,   // 30% more spacing for two-line names
+      3: 1.6,   // 60% more spacing for three-line names
+    }[Math.min(nameLineCount, 3)] || 1.8; // 80% more for 4+ lines
     
-    return lines;
+    return Math.round(baseSpacing * spacingMultiplier);
   };
 
   if (!selectedTemplate) {

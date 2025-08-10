@@ -281,7 +281,7 @@ export class PosterService {
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.font = `${nameWeight} ${nameFontSize}px Arial, sans-serif`;
     
-    const nameLines = this.smartWrapText(tempCtx, nameContent, textAreaWidth);
+    const nameLines = this.intelligentWrapText(tempCtx, nameContent, textAreaWidth);
     const nameLineHeight = nameFontSize * 1.25;
     const nameTotalHeight = nameLines.length * nameLineHeight;
     
@@ -293,117 +293,54 @@ export class PosterService {
     
     // Measure title text
     tempCtx.font = `${titleWeight} ${titleFontSize}px Arial, sans-serif`;
-    const titleLines = this.wrapText(tempCtx, titleContent, textAreaWidth);
+    const titleLines = this.intelligentWrapText(tempCtx, titleContent, textAreaWidth);
     const titleLineHeight = titleFontSize * 1.3;
     const titleTotalHeight = titleLines.length * titleLineHeight;
     
-    // Dynamic spacing between name and title based on name line count
-    let nameToTitleSpacing: number;
-    if (nameLines.length === 1) {
-      nameToTitleSpacing = (15 / 1080) * canvasSize; // Tight spacing for single-line names
-    } else if (nameLines.length === 2) {
-      nameToTitleSpacing = (25 / 1080) * canvasSize; // Medium spacing for two-line names
-    } else {
-      nameToTitleSpacing = (35 / 1080) * canvasSize; // Generous spacing for multi-line names
+
+  // Intelligent text wrapping with visual balance (backend version)
+  private intelligentWrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+    const words = text.split(' ');
+    
+    if (words.length === 1) {
+      const wordWidth = ctx.measureText(text).width;
+      if (wordWidth <= maxWidth) return [text];
+      return this.breakLongWord(ctx, text, maxWidth);
     }
     
-    console.log(`Dynamic spacing calculation: name has ${nameLines.length} lines, using ${nameToTitleSpacing}px spacing`);
-    
-    // Calculate total text block height
-    const totalTextHeight = nameTotalHeight + nameToTitleSpacing + titleTotalHeight;
-    
-    // Center the text block vertically with the photo zone
-    const textBlockStartY = scaledPhotoZone.centerY - (totalTextHeight / 2);
-    
-    // Name layout data
-    const nameTopY = textBlockStartY;
-    const nameBottomY = nameTopY + nameTotalHeight;
-    const nameLayoutData = {
-      type: 'name' as const,
-      textContent: nameContent,
-      coordinates: {
-        topLeft: { x: Math.round(textAreaLeft), y: Math.round(nameTopY) },
-        topRight: { x: Math.round(textAreaRight), y: Math.round(nameTopY) },
-        bottomRight: { x: Math.round(textAreaRight), y: Math.round(nameBottomY) },
-        bottomLeft: { x: Math.round(textAreaLeft), y: Math.round(nameBottomY) }
-      },
-      width: Math.round(textAreaWidth),
-      height: Math.round(nameTotalHeight),
-      fontSize: Math.round(nameFontSize),
-      fontWeight: nameWeight,
-      fontFamily: nameZone.fontFamily,
-      color: nameZone.color,
-      textAlign: 'left',
-      lines: nameLines,
-      lineHeight: nameLineHeight
-    };
-    
-    // Title layout data
-    const titleTopY = nameBottomY + nameToTitleSpacing;
-    const titleBottomY = titleTopY + titleTotalHeight;
-    const titleLayoutData = {
-      type: 'title' as const,
-      textContent: titleContent,
-      coordinates: {
-        topLeft: { x: Math.round(textAreaLeft), y: Math.round(titleTopY) },
-        topRight: { x: Math.round(textAreaRight), y: Math.round(titleTopY) },
-        bottomRight: { x: Math.round(textAreaRight), y: Math.round(titleBottomY) },
-        bottomLeft: { x: Math.round(textAreaLeft), y: Math.round(titleBottomY) }
-      },
-      width: Math.round(textAreaWidth),
-      height: Math.round(titleTotalHeight),
-      fontSize: Math.round(titleFontSize),
-      fontWeight: titleWeight,
-      fontFamily: titleZone.fontFamily,
-      color: titleZone.color,
-      textAlign: 'left',
-      lines: titleLines,
-      lineHeight: titleLineHeight
-    };
-    
-    return [nameLayoutData, titleLayoutData];
-  }
-
-  // Smart text wrapping for names - tries to break at better points
-  private smartWrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-    const words = text.split(' ');
-    if (words.length === 1) {
-      // Single word - use regular wrapping
-      return this.wrapText(ctx, text, maxWidth);
+    // For names, try to balance line lengths
+    if (words.length === 2) {
+      const fullWidth = ctx.measureText(text).width;
+      const firstWord = ctx.measureText(words[0]).width;
+      const secondWord = ctx.measureText(words[1]).width;
+      
+      if (fullWidth <= maxWidth) {
+        return [text];
+      }
+      
+      if (firstWord <= maxWidth && secondWord <= maxWidth) {
+        const ratio = Math.max(firstWord, secondWord) / Math.min(firstWord, secondWord);
+        if (ratio < 3) {
+          return [words[0], words[1]];
+        }
+      }
     }
     
     const lines: string[] = [];
     let currentLine = '';
     
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
+    for (const word of words) {
       const testLine = currentLine + (currentLine ? ' ' : '') + word;
-      const metrics = ctx.measureText(testLine);
+      const testWidth = ctx.measureText(testLine).width;
       
-      if (metrics.width > maxWidth && currentLine) {
-        // Try to balance lines better for names
-        if (words.length === 2) {
-          // For 2 words, check if first word alone is too long
-          const firstWordMetrics = ctx.measureText(words[0]);
-          if (firstWordMetrics.width < maxWidth * 0.7) {
-            // First word is reasonable, put each word on its own line
-            lines.push(words[0]);
-            lines.push(words[1]);
-            return lines;
-          }
-        }
-        
+      if (testWidth > maxWidth && currentLine) {
         lines.push(currentLine);
         currentLine = word;
         
-        // Handle overly long single words
-        const singleWordMetrics = ctx.measureText(word);
-        if (singleWordMetrics.width > maxWidth) {
-          const brokenWord = this.breakLongWord(ctx, word, maxWidth);
-          if (brokenWord.length > 1) {
-            lines.push(...brokenWord.slice(0, -1));
-            currentLine = brokenWord[brokenWord.length - 1];
-          }
+        if (ctx.measureText(word).width > maxWidth) {
+          const brokenParts = this.breakLongWord(ctx, word, maxWidth);
+          lines.push(...brokenParts.slice(0, -1));
+          currentLine = brokenParts[brokenParts.length - 1] || '';
         }
       } else {
         currentLine = testLine;
@@ -441,38 +378,4 @@ export class PosterService {
     return pieces;
   }
 
-  // Regular text wrapping for titles and other text
-  private wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-    const words = text.split(' ');
-    const lines: string[] = [];
-    let currentLine = '';
-
-    for (const word of words) {
-      const testLine = currentLine + (currentLine ? ' ' : '') + word;
-      const metrics = ctx.measureText(testLine);
-      
-      if (metrics.width > maxWidth && currentLine) {
-        lines.push(currentLine);
-        currentLine = word;
-        
-        // Check if single word is too long, break it
-        const singleWordMetrics = ctx.measureText(word);
-        if (singleWordMetrics.width > maxWidth) {
-          const brokenWord = this.breakLongWord(ctx, word, maxWidth);
-          if (brokenWord.length > 1) {
-            lines.push(...brokenWord.slice(0, -1));
-            currentLine = brokenWord[brokenWord.length - 1];
-          }
-        }
-      } else {
-        currentLine = testLine;
-      }
-    }
-    
-    if (currentLine) {
-      lines.push(currentLine);
-    }
-    
-    return lines;
-  }
 }

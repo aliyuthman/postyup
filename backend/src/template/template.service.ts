@@ -56,56 +56,74 @@ export class TemplateService {
           full: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/classic-endorsement-full.png',
         },
         layoutConfig: {
-          textZones: [
-            {
-              type: 'name',
-              // Four-point coordinate system for precise text boundaries
-              coordinates: {
-                topLeft: { x: 282.07, y: 893.34 },
-                topRight: { x: 652.76, y: 893.34 }, // 282.07 + 370.69
-                bottomRight: { x: 652.76, y: 1013.34 }, // 893.34 + 120
-                bottomLeft: { x: 282.07, y: 1013.34 }
-              },
-              // Legacy support (will be deprecated)
-              x: 282.07,
-              y: 893.34,
-              width: 370.69,
-              height: 120,
-              fontSize: 0.0278, // 30px at 1080px (30/1080)
-              fontFamily: 'Inter',
-              fontWeight: 'bold',
-              color: '#000000',
-              textAlign: 'left',
-              textTransform: 'uppercase',
-            },
-            {
-              type: 'title',
-              // Four-point coordinate system for precise text boundaries
-              coordinates: {
-                topLeft: { x: 284.23, y: 967.97 },
-                topRight: { x: 652.76, y: 967.97 }, // 284.23 + 368.53
-                bottomRight: { x: 652.76, y: 1067.97 }, // 967.97 + 100
-                bottomLeft: { x: 284.23, y: 1067.97 }
-              },
-              // Legacy support (will be deprecated)
-              x: 284.23,
-              y: 967.97,
-              width: 368.53,
-              height: 100,
-              fontSize: 0.0222, // 24px at 1080px (24/1080)
-              fontFamily: 'Inter',
-              fontWeight: 'normal',
-              color: '#666666',
-              textAlign: 'left',
-            },
-          ],
+          // Simplified configuration - text positioning is now handled adaptively
           photoZones: [
             {
-              x: 52.8,
-              y: 872.96,
-              width: 179.84,
-              height: 179.84,
-              borderRadius: 89.92,
+              x: 720,     // Photo positioned on the right side
+              y: 400,     // Vertically centered
+              width: 280, // Square photo
+              height: 280,
+              borderRadius: 140, // Circular photo (280/2)
+            },
+          ],
+        },
+      },
+      {
+        name: 'Modern Campaign',
+        category: 'Campaign',
+        imageUrls: {
+          thumbnail: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/modern-campaign-thumb.png',
+          preview: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/modern-campaign-preview.png',
+          full: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/modern-campaign-full.png',
+        },
+        layoutConfig: {
+          photoZones: [
+            {
+              x: 740,
+              y: 380,
+              width: 260,
+              height: 260,
+              borderRadius: 20, // Rounded square
+            },
+          ],
+        },
+      },
+      {
+        name: 'Bold Statement',
+        category: 'Event',
+        imageUrls: {
+          thumbnail: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/bold-statement-thumb.png',
+          preview: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/bold-statement-preview.png',
+          full: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/bold-statement-full.png',
+        },
+        layoutConfig: {
+          photoZones: [
+            {
+              x: 720,
+              y: 360,
+              width: 300,
+              height: 300,
+              borderRadius: 150, // Circular
+            },
+          ],
+        },
+      },
+      {
+        name: 'Professional Announcement',
+        category: 'Announcement',
+        imageUrls: {
+          thumbnail: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/professional-announcement-thumb.png',
+          preview: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/professional-announcement-preview.png',
+          full: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/professional-announcement-full.png',
+        },
+        layoutConfig: {
+          photoZones: [
+            {
+              x: 730,
+              y: 400,
+              width: 240,
+              height: 240,
+              borderRadius: 12, // Slightly rounded
             },
           ],
         },
