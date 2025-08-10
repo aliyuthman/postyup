@@ -59,17 +59,17 @@ export class TemplateService {
           textZones: [
             {
               type: 'name',
-              // Four-point coordinate system for precise text boundaries - aligned with photo zone
+              // Four-point coordinate system for precise text boundaries
               coordinates: {
-                topLeft: { x: 52.8, y: 893.34 }, // Aligned with photo zone x
-                topRight: { x: 652.76, y: 893.34 }, // Full width available
+                topLeft: { x: 282.07, y: 893.34 },
+                topRight: { x: 652.76, y: 893.34 }, // 282.07 + 370.69
                 bottomRight: { x: 652.76, y: 1013.34 }, // 893.34 + 120
-                bottomLeft: { x: 52.8, y: 1013.34 }
+                bottomLeft: { x: 282.07, y: 1013.34 }
               },
               // Legacy support (will be deprecated)
-              x: 52.8, // Aligned with photo zone
+              x: 282.07,
               y: 893.34,
-              width: 599.96, // 652.76 - 52.8 = full available width
+              width: 370.69,
               height: 120,
               fontSize: 0.0278, // 30px at 1080px (30/1080)
               fontFamily: 'Inter',
@@ -80,17 +80,17 @@ export class TemplateService {
             },
             {
               type: 'title',
-              // Four-point coordinate system for precise text boundaries - aligned with photo zone
+              // Four-point coordinate system for precise text boundaries
               coordinates: {
-                topLeft: { x: 52.8, y: 967.97 }, // Aligned with photo zone x
-                topRight: { x: 652.76, y: 967.97 }, // Full width available
+                topLeft: { x: 284.23, y: 967.97 },
+                topRight: { x: 652.76, y: 967.97 }, // 284.23 + 368.53
                 bottomRight: { x: 652.76, y: 1067.97 }, // 967.97 + 100
-                bottomLeft: { x: 52.8, y: 1067.97 }
+                bottomLeft: { x: 284.23, y: 1067.97 }
               },
               // Legacy support (will be deprecated)
-              x: 52.8, // Aligned with photo zone
+              x: 284.23,
               y: 967.97,
-              width: 599.96, // 652.76 - 52.8 = full available width
+              width: 368.53,
               height: 100,
               fontSize: 0.0222, // 24px at 1080px (24/1080)
               fontFamily: 'Inter',
