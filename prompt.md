@@ -9,7 +9,7 @@ CORE FEATURES:
 - Template gallery browsing with pre-designed political poster templates
 - Real-time poster preview with supporter details overlaid
 - Multi-resolution image handling (thumbnails for browsing, preview for editing, full quality for final output)
-- High-quality poster generation and download (1080px final resolution)
+- High-quality poster generation and download (2000px final resolution)
 - Social media sharing capabilities with pre-populated campaign messaging
 - Template categories: Endorsement, Issue-based, Event-specific, Professional, Casual
 - Session-based data storage (no authentication required for MVP)
@@ -26,7 +26,7 @@ TECHNICAL REQUIREMENTS:
 - Supabase Storage for template assets and temporary photo storage
 - Form validation for supporter input fields
 - File upload handling with image optimization
-- Multi-resolution image pipeline (270px thumbnails, 540px previews, 1080px final)
+- Multi-resolution image pipeline (270px thumbnails, 540px previews, 2000px final)
 
 DESIGN REQUIREMENTS:
 - Mobile-first responsive design (primary focus on phone experience)

@@ -23,9 +23,9 @@ A mobile-first responsive web app that allows supporters of a political party ca
 - **User control**: Full manipulation of how their photo appears in the final poster
 
 ### 3. Multi-Resolution Strategy
-- **Performance optimization**: 1:1 1080px templates would be too large for preview
+- **Performance optimization**: 1:1 2000px templates would be too large for preview
 - **Thumbnail version**: Programmatically generated smaller version for preview interface
-- **Quality preservation**: Final shareable and downloadable version maintains actual 1080px size for optimal quality
+- **Quality preservation**: Final shareable and downloadable version maintains actual 2000px size for optimal quality
 - **Smart rendering**: Preview uses smaller resolution, final output uses full resolution
 
 ### 4. Core User Flow
@@ -33,7 +33,7 @@ A mobile-first responsive web app that allows supporters of a political party ca
 2. **Photo Cropping**: Interactive tool to select and adjust photo area
 3. **Template Selection**: Browse pre-designed poster options (shown as thumbnails)
 4. **Preview**: See customized poster with their details (using optimized preview size)
-5. **Download/Share**: Generate and deliver full-quality 1080px final poster
+5. **Download/Share**: Generate and deliver full-quality 2000px final poster
 
 ### 5. Technical Architecture
 - **Frontend**: Mobile-first responsive design
@@ -55,7 +55,7 @@ A mobile-first responsive web app that allows supporters of a political party ca
 
 You envision a streamlined, mobile-optimized web application that transforms political supporters into content creators. The app eliminates technical barriers by providing professionally designed poster templates while giving users meaningful control over their personal representation through an intuitive photo cropping interface. 
 
-The technical approach prioritizes performance through smart multi-resolution handling - using smaller images for smooth preview experiences while ensuring the final output maintains campaign-quality standards at full 1080px resolution. 
+The technical approach prioritizes performance through smart multi-resolution handling - using smaller images for smooth preview experiences while ensuring the final output maintains campaign-quality standards at full 2000px resolution. 
 
 By avoiding authentication complexity and focusing solely on the core supporter-to-content pipeline, the MVP can launch quickly while still delivering a polished, share-worthy end product that amplifies grassroots campaign engagement across social media platforms.
 

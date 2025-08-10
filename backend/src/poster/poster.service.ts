@@ -25,7 +25,7 @@ export class PosterService {
         throw new Error('Template not found');
       }
 
-      // Generate both preview (540px) and final (1080px) versions
+      // Generate both preview (540px) and final (2000px) versions
       const previewBuffer = await this.composePoster(
         template,
         supporterData,
@@ -36,7 +36,7 @@ export class PosterService {
         template,
         supporterData,
         photoUrl,
-        1080
+        2000
       );
 
       // Upload preview version
@@ -113,10 +113,10 @@ export class PosterService {
         const photoBuffer = await photoResponse.arrayBuffer();
 
         // Calculate scaled dimensions
-        const photoX = Math.round((photoZone.x / 1080) * size);
-        const photoY = Math.round((photoZone.y / 1080) * size);
-        const photoWidth = Math.round((photoZone.width / 1080) * size);
-        const photoHeight = Math.round((photoZone.height / 1080) * size);
+        const photoX = Math.round((photoZone.x / 2000) * size);
+        const photoY = Math.round((photoZone.y / 2000) * size);
+        const photoWidth = Math.round((photoZone.width / 2000) * size);
+        const photoHeight = Math.round((photoZone.height / 2000) * size);
 
         // Process photo
         let processedPhoto = sharp(Buffer.from(photoBuffer))
@@ -124,7 +124,7 @@ export class PosterService {
 
         // Apply border radius if specified
         if (photoZone.borderRadius) {
-          const radius = Math.round((photoZone.borderRadius / 1080) * size);
+          const radius = Math.round((photoZone.borderRadius / 2000) * size);
           processedPhoto = processedPhoto.png().composite([{
             input: Buffer.from(
               `<svg><rect x="0" y="0" width="${photoWidth}" height="${photoHeight}" rx="${radius}" ry="${radius}"/></svg>`
@@ -161,8 +161,8 @@ export class PosterService {
             const canvas = createCanvas(layoutData.width, layoutData.height);
             const ctx = canvas.getContext('2d');
 
-            // Set font properties
-            ctx.font = `${layoutData.fontWeight} ${layoutData.fontSize}px Arial, sans-serif`;
+            // Set font properties with Inter font family
+            ctx.font = `${layoutData.fontWeight} ${layoutData.fontSize}px 'Inter', Arial, sans-serif`;
             ctx.fillStyle = layoutData.color;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
@@ -258,45 +258,86 @@ export class PosterService {
 
     // Scale photo zone to canvas size
     const scaledPhotoZone = {
-      x: (photoZone.x / 1080) * canvasSize,
-      y: (photoZone.y / 1080) * canvasSize,
-      width: (photoZone.width / 1080) * canvasSize,
-      height: (photoZone.height / 1080) * canvasSize,
-      centerY: ((photoZone.y + photoZone.height / 2) / 1080) * canvasSize
+      x: (photoZone.x / 2000) * canvasSize,
+      y: (photoZone.y / 2000) * canvasSize,
+      width: (photoZone.width / 2000) * canvasSize,
+      height: (photoZone.height / 2000) * canvasSize,
+      centerY: ((photoZone.y + photoZone.height / 2) / 2000) * canvasSize
     };
     
-    // Define text area coordinates (left side layout)
-    const textAreaLeft = (50 / 1080) * canvasSize; // Left margin
-    const textAreaRight = scaledPhotoZone.x - (30 / 1080) * canvasSize; // 30px gap before photo
+    // Define text area coordinates (above photo layout)
+    // With photo at bottom left (88, 1607), position text above it
+    const textAreaLeft = (100 / 2000) * canvasSize; // Left margin 
+    const textAreaRight = (1900 / 2000) * canvasSize; // Right margin
     const textAreaWidth = textAreaRight - textAreaLeft;
     
-    // Calculate name text properties
+    // Calculate name text properties using exact Photoshop specifications
     const nameContent = nameZone.textTransform === 'uppercase' ? content.name.toUpperCase() : content.name;
-    const nameBaseFontSize = nameZone.fontSize * canvasSize * 1.4; // 1.4x larger
-    const nameFontSize = Math.max(nameBaseFontSize, 18);
-    const nameWeight = nameZone.fontWeight === 'bold' ? 'bold' : (nameZone.fontWeight || 'normal');
+    // 14pt at 300 DPI = 58.33px, scaled for canvas size
+    const nameFontSize = (58.33 / 2000) * canvasSize;
+    // 16pt line height at 300 DPI = 66.67px, scaled for canvas size
+    const nameLineHeight = (66.67 / 2000) * canvasSize;
+    const nameWeight = '700'; // Font weight 700 (bold)
     
     // Create temporary canvas to measure name text
     const tempCanvas = createCanvas(textAreaWidth, 200);
     const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.font = `${nameWeight} ${nameFontSize}px Arial, sans-serif`;
+    tempCtx.font = `${nameWeight} ${nameFontSize}px 'Inter', Arial, sans-serif`;
     
     const nameLines = this.intelligentWrapText(tempCtx, nameContent, textAreaWidth);
-    const nameLineHeight = nameFontSize * 1.25;
     const nameTotalHeight = nameLines.length * nameLineHeight;
     
-    // Calculate title text properties
+    // Calculate title text properties using exact Photoshop specifications
     const titleContent = content.title;
-    const titleBaseFontSize = titleZone.fontSize * canvasSize * 1.2; // 1.2x larger
-    const titleFontSize = Math.max(titleBaseFontSize, 16);
-    const titleWeight = titleZone.fontWeight === 'bold' ? 'bold' : (titleZone.fontWeight || 'normal');
+    // 12pt at 300 DPI = 50px, scaled for canvas size
+    const titleFontSize = (50 / 2000) * canvasSize;
+    // 14pt line height at 300 DPI = 58.33px, scaled for canvas size
+    const titleLineHeight = (58.33 / 2000) * canvasSize;
+    const titleWeight = '400'; // Font weight 400 (normal)
     
     // Measure title text
-    tempCtx.font = `${titleWeight} ${titleFontSize}px Arial, sans-serif`;
+    tempCtx.font = `${titleWeight} ${titleFontSize}px 'Inter', Arial, sans-serif`;
     const titleLines = this.intelligentWrapText(tempCtx, titleContent, textAreaWidth);
-    const titleLineHeight = titleFontSize * 1.3;
     const titleTotalHeight = titleLines.length * titleLineHeight;
     
+    // Return the calculated layout data
+    return [
+      {
+        type: 'name',
+        textContent: nameContent,
+        coordinates: {
+          topLeft: { x: textAreaLeft, y: scaledPhotoZone.y - nameTotalHeight - 40 },
+          topRight: { x: textAreaLeft + textAreaWidth, y: scaledPhotoZone.y - nameTotalHeight - 40 },
+          bottomRight: { x: textAreaLeft + textAreaWidth, y: scaledPhotoZone.y - 40 },
+          bottomLeft: { x: textAreaLeft, y: scaledPhotoZone.y - 40 }
+        },
+        width: textAreaWidth,
+        height: nameTotalHeight,
+        fontSize: nameFontSize,
+        fontWeight: nameWeight,
+        color: nameZone.color,
+        lines: nameLines,
+        lineHeight: nameLineHeight
+      },
+      {
+        type: 'title',
+        textContent: titleContent,
+        coordinates: {
+          topLeft: { x: textAreaLeft, y: scaledPhotoZone.y - 20 },
+          topRight: { x: textAreaLeft + textAreaWidth, y: scaledPhotoZone.y - 20 },
+          bottomRight: { x: textAreaLeft + textAreaWidth, y: scaledPhotoZone.y - 20 + titleTotalHeight },
+          bottomLeft: { x: textAreaLeft, y: scaledPhotoZone.y - 20 + titleTotalHeight }
+        },
+        width: textAreaWidth,
+        height: titleTotalHeight,
+        fontSize: titleFontSize,
+        fontWeight: titleWeight,
+        color: '#605e5e', // Exact color from Photoshop specifications
+        lines: titleLines,
+        lineHeight: titleLineHeight
+      }
+    ];
+  }
 
   // Intelligent text wrapping with visual balance (backend version)
   private intelligentWrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {

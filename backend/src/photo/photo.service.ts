@@ -13,7 +13,7 @@ export class PhotoService {
     try {
       // Process image with Sharp
       const processedImage = await sharp(file.buffer)
-        .resize(1080, 1080, { fit: 'cover' })
+        .resize(2000, 2000, { fit: 'cover' })
         .jpeg({ quality: 90 })
         .toBuffer();
 

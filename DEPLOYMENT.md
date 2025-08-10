@@ -189,7 +189,7 @@ echo "Migration complete!"
 For each template, create:
 - `template-name-thumb.png` (270x270px)
 - `template-name-preview.png` (540x540px) 
-- `template-name-full.png` (1080x1080px)
+- `template-name-full.png` (2000x2000px)
 
 ### 2. Upload to Supabase Storage
 
@@ -364,7 +364,7 @@ app.use('/static', express.static('public', {
 // Optimize Sharp settings for production
 const optimizeImage = (buffer: Buffer) => {
   return sharp(buffer)
-    .resize(1080, 1080, { fit: 'cover' })
+    .resize(2000, 2000, { fit: 'cover' })
     .jpeg({ quality: 85, progressive: true })
     .toBuffer();
 };

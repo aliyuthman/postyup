@@ -10,7 +10,7 @@ A modern, professional political poster generator application that helps campaig
 - **Real-Time Preview**: Live poster preview with supporter details overlaid
 - **Multi-Resolution Support**: Optimized images for browsing, editing, and final output
 - **Social Media Sharing**: Direct sharing to Facebook, Twitter, WhatsApp, and Instagram
-- **High-Quality Downloads**: 1080px final resolution posters
+- **High-Quality Downloads**: 2000px final resolution posters
 - **Session Persistence**: No login required, session-based data storage
 - **Analytics Tracking**: Basic usage analytics and poster generation tracking
 
@@ -180,7 +180,7 @@ postyup/
 
 ### Template Structure
 Templates consist of:
-1. **Images**: thumbnail (270px), preview (540px), full (1080px)
+1. **Images**: thumbnail (270px), preview (540px), full (2000px)
 2. **Layout Configuration**: JSON defining text and photo zones
 
 ### Example Template Configuration

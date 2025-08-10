@@ -56,14 +56,14 @@ export class TemplateService {
           full: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/classic-endorsement-full.png',
         },
         layoutConfig: {
-          // Simplified configuration - text positioning is now handled adaptively
+          // Photo zone with exact Photoshop specifications (2000x2000 canvas)
           photoZones: [
             {
-              x: 720,     // Photo positioned on the right side
-              y: 400,     // Vertically centered
-              width: 280, // Square photo
-              height: 280,
-              borderRadius: 140, // Circular photo (280/2)
+              x: 88,      // Exact X position from Photoshop
+              y: 1607,    // Exact Y position from Photoshop  
+              width: 368, // Exact width from Photoshop
+              height: 368, // Exact height from Photoshop
+              borderRadius: 184, // Circular photo (368/2)
             },
           ],
         },
@@ -79,11 +79,11 @@ export class TemplateService {
         layoutConfig: {
           photoZones: [
             {
-              x: 740,
-              y: 380,
-              width: 260,
-              height: 260,
-              borderRadius: 20, // Rounded square
+              x: 88,      // Consistent positioning across templates
+              y: 1607,    // Consistent positioning across templates
+              width: 368, // Consistent sizing across templates
+              height: 368,
+              borderRadius: 184, // Circular photo
             },
           ],
         },
@@ -99,11 +99,11 @@ export class TemplateService {
         layoutConfig: {
           photoZones: [
             {
-              x: 720,
-              y: 360,
-              width: 300,
-              height: 300,
-              borderRadius: 150, // Circular
+              x: 88,      // Consistent positioning across templates
+              y: 1607,    // Consistent positioning across templates
+              width: 368, // Consistent sizing across templates
+              height: 368,
+              borderRadius: 184, // Circular photo
             },
           ],
         },
@@ -119,11 +119,11 @@ export class TemplateService {
         layoutConfig: {
           photoZones: [
             {
-              x: 730,
-              y: 400,
-              width: 240,
-              height: 240,
-              borderRadius: 12, // Slightly rounded
+              x: 88,      // Consistent positioning across templates
+              y: 1607,    // Consistent positioning across templates
+              width: 368, // Consistent sizing across templates
+              height: 368,
+              borderRadius: 184, // Circular photo
             },
           ],
         },
