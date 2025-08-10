@@ -59,18 +59,18 @@ export class TemplateService {
           textZones: [
             {
               type: 'name',
-              // Text zone positioned to the right of photo zone with vertical centering
+              // Four-point coordinate system for precise text boundaries - aligned with photo zone
               coordinates: {
-                topLeft: { x: 252.64, y: 902.88 }, // Photo right edge + spacing, vertically centered
-                topRight: { x: 652.76, y: 902.88 }, // Right edge of poster
-                bottomRight: { x: 652.76, y: 962.88 }, // 902.88 + 60 (name height)
-                bottomLeft: { x: 252.64, y: 962.88 }
+                topLeft: { x: 52.8, y: 893.34 }, // Aligned with photo zone x
+                topRight: { x: 652.76, y: 893.34 }, // Full width available
+                bottomRight: { x: 652.76, y: 1013.34 }, // 893.34 + 120
+                bottomLeft: { x: 52.8, y: 1013.34 }
               },
               // Legacy support (will be deprecated)
-              x: 252.64, // Photo right edge + spacing
-              y: 902.88, // Vertically centered with photo zone center
-              width: 400.12, // 652.76 - 252.64 = available width
-              height: 60, // Reduced height for better spacing
+              x: 52.8, // Aligned with photo zone
+              y: 893.34,
+              width: 599.96, // 652.76 - 52.8 = full available width
+              height: 120,
               fontSize: 0.0278, // 30px at 1080px (30/1080)
               fontFamily: 'Inter',
               fontWeight: 'bold',
@@ -80,18 +80,18 @@ export class TemplateService {
             },
             {
               type: 'title',
-              // Title positioned directly below name in the text zone container
+              // Four-point coordinate system for precise text boundaries - aligned with photo zone
               coordinates: {
-                topLeft: { x: 252.64, y: 972.88 }, // Same x as name, y = name bottom + 10px spacing
-                topRight: { x: 652.76, y: 972.88 }, // Right edge of poster
-                bottomRight: { x: 652.76, y: 1022.88 }, // 972.88 + 50 (title height)
-                bottomLeft: { x: 252.64, y: 1022.88 }
+                topLeft: { x: 52.8, y: 967.97 }, // Aligned with photo zone x
+                topRight: { x: 652.76, y: 967.97 }, // Full width available
+                bottomRight: { x: 652.76, y: 1067.97 }, // 967.97 + 100
+                bottomLeft: { x: 52.8, y: 1067.97 }
               },
               // Legacy support (will be deprecated)
-              x: 252.64, // Same x as name
-              y: 972.88, // Below name with 10px spacing
-              width: 400.12, // Same width as name
-              height: 50, // Reduced height for better spacing
+              x: 52.8, // Aligned with photo zone
+              y: 967.97,
+              width: 599.96, // 652.76 - 52.8 = full available width
+              height: 100,
               fontSize: 0.0222, // 24px at 1080px (24/1080)
               fontFamily: 'Inter',
               fontWeight: 'normal',
