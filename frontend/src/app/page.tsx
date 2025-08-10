@@ -214,23 +214,38 @@ export default function Home() {
     <div className="min-h-screen bg-[#0A0A0A] relative">
       {/* Loading/Success Overlay */}
       {(generationStatus === 'generating' || generationStatus === 'completed') && (
-        <div className="fixed inset-0 bg-[#0A0A0A] bg-opacity-80 flex items-center justify-center z-50">
-          <div className="text-center">
+        <div className="fixed inset-0 bg-[#0A0A0A] bg-opacity-90 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#171717] rounded-2xl p-6 sm:p-8 max-w-sm w-full mx-auto border border-[#262626] text-center">
             {generationStatus === 'generating' ? (
               <>
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FAFAFA] mx-auto mb-4"></div>
-                <p className="text-[#FAFAFA] text-lg font-medium">Generating your poster...</p>
-                <p className="text-[#A3A3A3] text-sm mt-2">This may take a few moments</p>
+                <div className="relative mb-6">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#404040] border-t-[#FAFAFA] mx-auto"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-6 h-6 bg-[#FAFAFA] rounded-full opacity-20 animate-pulse"></div>
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-[#FAFAFA] mb-2">Creating Your Poster</h3>
+                <p className="text-[#A3A3A3] text-sm mb-4 leading-relaxed">
+                  We're processing your photo and generating a high-quality 1080×1080 poster. This usually takes 15-30 seconds.
+                </p>
+                <div className="bg-[#262626] rounded-lg p-3">
+                  <div className="flex items-center justify-center gap-2 text-xs text-[#737373]">
+                    <div className="w-2 h-2 bg-[#FAFAFA] rounded-full animate-pulse"></div>
+                    <span>Please keep this tab open</span>
+                  </div>
+                </div>
               </>
             ) : (
               <>
-                <div className="bg-green-500 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                <div className="bg-gradient-to-r from-green-500 to-green-400 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-[#FAFAFA] text-lg font-medium">Poster generated successfully!</p>
-                <p className="text-[#A3A3A3] text-sm mt-2">Redirecting you to download...</p>
+                <h3 className="text-xl font-bold text-[#FAFAFA] mb-2">Poster Ready!</h3>
+                <p className="text-[#A3A3A3] text-sm">
+                  Your professional poster has been generated successfully and is ready for download.
+                </p>
               </>
             )}
           </div>
@@ -297,19 +312,38 @@ export default function Home() {
         )}
 
         {currentStep === 'photo' && (
-          <div className="max-w-md mx-auto space-y-4 sm:space-y-6">
+          <div className="w-full max-w-lg mx-auto space-y-6 px-4">
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Add Photo</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Upload your photo</p>
+              <p className="text-[#A3A3A3] text-sm sm:text-base">
+                {!showCropper ? 'Upload a clear photo of yourself' : 'Crop your photo to fit perfectly'}
+              </p>
             </div>
             
             {!showCropper ? (
               <PhotoUpload onPhotoSelected={handlePhotoSelected} />
             ) : (
-              <PhotoCropper 
-                imageSrc={photo.url!} 
-                onCropComplete={handleCropComplete}
-              />
+              <div className="space-y-4">
+                <PhotoCropper 
+                  imageSrc={photo.url!} 
+                  onCropComplete={handleCropComplete}
+                />
+                <div className="bg-[#171717] rounded-xl p-4 border border-[#262626]">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#FAFAFA] mb-1">Cropping Tips</p>
+                      <p className="text-xs text-[#A3A3A3] leading-relaxed">
+                        Position your face in the center of the circle. Your photo will be used to create a professional poster.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
