@@ -85,10 +85,7 @@ export default function Home() {
 
   const handleCropComplete = () => {
     setShowCropper(false);
-    // Auto-advance to details step after a brief moment to show completion
-    setTimeout(() => {
-      nextStep();
-    }, 500);
+    nextStep();
   };
 
   const handleTemplateSelect = (template: Template) => {
@@ -217,42 +214,23 @@ export default function Home() {
     <div className="min-h-screen bg-[#0A0A0A] relative">
       {/* Loading/Success Overlay */}
       {(generationStatus === 'generating' || generationStatus === 'completed') && (
-        <div className="fixed inset-0 bg-[#0A0A0A] bg-opacity-90 flex items-center justify-center z-50">
-          <div className="bg-[#171717] rounded-2xl p-8 border border-[#262626] max-w-md mx-4 text-center">
+        <div className="fixed inset-0 bg-[#0A0A0A] bg-opacity-80 flex items-center justify-center z-50">
+          <div className="text-center">
             {generationStatus === 'generating' ? (
               <>
-                <div className="relative mb-6">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#404040] border-t-[#FAFAFA] mx-auto"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 bg-[#FAFAFA] rounded-full opacity-20 animate-pulse"></div>
-                  </div>
-                </div>
-                <h3 className="text-[#FAFAFA] text-xl font-semibold mb-2">Creating Your Poster</h3>
-                <div className="space-y-2 text-sm text-[#A3A3A3]">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span>Processing your photo</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                    <span>Rendering text layers</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-2 h-2 bg-[#404040] rounded-full"></div>
-                    <span>Generating high-quality output</span>
-                  </div>
-                </div>
-                <p className="text-[#737373] text-xs mt-4">This usually takes 10-15 seconds</p>
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FAFAFA] mx-auto mb-4"></div>
+                <p className="text-[#FAFAFA] text-lg font-medium">Generating your poster...</p>
+                <p className="text-[#A3A3A3] text-sm mt-2">This may take a few moments</p>
               </>
             ) : (
               <>
-                <div className="bg-gradient-to-r from-green-500 to-green-400 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                <div className="bg-green-500 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-[#FAFAFA] text-xl font-semibold mb-2">Poster Ready!</h3>
-                <p className="text-[#A3A3A3] text-sm">Your high-quality 1080×1080 poster has been generated successfully</p>
+                <p className="text-[#FAFAFA] text-lg font-medium">Poster generated successfully!</p>
+                <p className="text-[#A3A3A3] text-sm mt-2">Redirecting you to download...</p>
               </>
             )}
           </div>
@@ -319,30 +297,7 @@ export default function Home() {
         )}
 
         {currentStep === 'photo' && (
-          <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
-            {/* Template Context */}
-            {useTemplateStore.getState().selectedTemplate && (
-              <div className="bg-[#171717] rounded-xl p-4 border border-[#262626]">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-[#404040] flex-shrink-0">
-                    <img 
-                      src={useTemplateStore.getState().selectedTemplate!.imageUrls.thumbnail} 
-                      alt="Template preview"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-[#FAFAFA] text-sm">
-                      {useTemplateStore.getState().selectedTemplate!.name}
-                    </h3>
-                    <p className="text-[#A3A3A3] text-xs mt-1">
-                      Your photo will appear in the circular area
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
+          <div className="max-w-md mx-auto space-y-4 sm:space-y-6">
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Add Photo</h2>
               <p className="text-[#A3A3A3] text-sm sm:text-base">Upload your photo</p>
@@ -360,94 +315,37 @@ export default function Home() {
         )}
 
         {currentStep === 'details' && (
-          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+          <div className="max-w-md mx-auto space-y-4 sm:space-y-6">
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Your Details</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Watch your poster come to life as you type</p>
+              <p className="text-[#A3A3A3] text-sm sm:text-base">Enter your information</p>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-              {/* Form Section */}
-              <div className="order-2 lg:order-1 space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-[#FAFAFA]">
-                      Your Name *
-                    </label>
-                    <span className={`text-xs ${name.length > 25 ? 'text-yellow-400' : 'text-[#A3A3A3]'}`}>
-                      {name.length}/30
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    value={name}
-                    maxLength={30}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      // Auto-advance when both fields are filled
-                      if (e.target.value.trim().length >= 2 && title.trim().length >= 2) {
-                        setTimeout(() => nextStep(), 1000);
-                      }
-                    }}
-                    placeholder={useTemplateStore.getState().selectedTemplate?.category === 'Endorsement' ? 'Sarah Johnson' : 'Alex Smith'}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#262626] border border-[#404040] rounded-xl focus:ring-2 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] placeholder-[#A3A3A3] text-sm sm:text-base"
-                  />
-                  <p className="text-xs text-[#A3A3A3] mt-1">Keep it short for best appearance</p>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-[#FAFAFA]">
-                      Your Title/Role *
-                    </label>
-                    <span className={`text-xs ${title.length > 35 ? 'text-yellow-400' : 'text-[#A3A3A3]'}`}>
-                      {title.length}/40
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    value={title}
-                    maxLength={40}
-                    onChange={(e) => {
-                      setTitle(e.target.value);
-                      // Auto-advance when both fields are filled
-                      if (name.trim().length >= 2 && e.target.value.trim().length >= 2) {
-                        setTimeout(() => nextStep(), 1000);
-                      }
-                    }}
-                    placeholder={useTemplateStore.getState().selectedTemplate?.category === 'Endorsement' ? 'Local Business Owner' : 'Community Leader'}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#262626] border border-[#404040] rounded-xl focus:ring-2 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] placeholder-[#A3A3A3] text-sm sm:text-base"
-                  />
-                  <p className="text-xs text-[#A3A3A3] mt-1">Describe your role or occupation</p>
-                </div>
-
-                {/* Progress Indicator */}
-                <div className="bg-[#171717] rounded-xl p-4 border border-[#262626]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-3 h-3 rounded-full ${name.trim().length >= 2 ? 'bg-green-500' : 'bg-[#404040]'}`} />
-                    <span className={`text-sm ${name.trim().length >= 2 ? 'text-green-400' : 'text-[#A3A3A3]'}`}>Name added</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${title.trim().length >= 2 ? 'bg-green-500' : 'bg-[#404040]'}`} />
-                    <span className={`text-sm ${title.trim().length >= 2 ? 'text-green-400' : 'text-[#A3A3A3]'}`}>Title added</span>
-                  </div>
-                  {name.trim().length >= 2 && title.trim().length >= 2 && (
-                    <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Moving to preview...
-                    </p>
-                  )}
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#FAFAFA] mb-2">
+                  Your Name *
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#262626] border border-[#404040] rounded-xl focus:ring-2 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] placeholder-[#A3A3A3] text-sm sm:text-base"
+                />
               </div>
-
-              {/* Live Preview Section */}
-              <div className="order-1 lg:order-2">
-                <div className="bg-[#171717] rounded-xl p-4 border border-[#262626] sticky top-4">
-                  <h3 className="text-sm font-medium text-[#FAFAFA] mb-3">Live Preview</h3>
-                  <PosterPreview width={300} height={300} showControls={false} />
-                </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-[#FAFAFA] mb-2">
+                  Your Title/Role *
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Small Business Owner"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#262626] border border-[#404040] rounded-xl focus:ring-2 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] placeholder-[#A3A3A3] text-sm sm:text-base"
+                />
               </div>
             </div>
           </div>
@@ -457,150 +355,67 @@ export default function Home() {
           <div className="space-y-4 sm:space-y-6">
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">
-                {finalPosterUrl ? 'Your poster is ready!' : 'Preview & Generate'}
+                {finalPosterUrl ? 'Your poster is ready!' : 'Preview your poster'}
               </h2>
               <p className="text-[#A3A3A3] text-sm sm:text-base">
                 {finalPosterUrl 
-                  ? 'Download your high-quality 1080x1080 poster' 
-                  : 'Review your poster and generate the final version'}
+                  ? 'Download and share your professional poster' 
+                  : 'Review and generate your final poster'}
               </p>
             </div>
             
-            <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                {/* Preview Section */}
-                <div className="order-2 lg:order-1">
-                  <PosterPreview 
-                    showControls={!finalPosterUrl}
-                    onGenerate={handleGeneratePoster}
-                  />
-                </div>
-
-                {/* Quick Edit Section */}
-                <div className="order-1 lg:order-2 space-y-4">
-                  {!finalPosterUrl ? (
-                    <>
-                      <div className="bg-[#171717] rounded-xl p-4 border border-[#262626]">
-                        <h3 className="text-sm font-medium text-[#FAFAFA] mb-3">Quick Edit</h3>
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-xs font-medium text-[#A3A3A3] mb-1">Name</label>
-                            <input
-                              type="text"
-                              value={name}
-                              maxLength={30}
-                              onChange={(e) => setName(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#262626] border border-[#404040] rounded-lg focus:ring-1 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-[#A3A3A3] mb-1">Title</label>
-                            <input
-                              type="text"
-                              value={title}
-                              maxLength={40}
-                              onChange={(e) => setTitle(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#262626] border border-[#404040] rounded-lg focus:ring-1 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] text-sm"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-[#171717] rounded-xl p-4 border border-[#262626]">
-                        <h3 className="text-sm font-medium text-[#FAFAFA] mb-3">Generation Details</h3>
-                        <div className="space-y-2 text-xs text-[#A3A3A3]">
-                          <div className="flex justify-between">
-                            <span>Template:</span>
-                            <span className="text-[#FAFAFA]">{useTemplateStore.getState().selectedTemplate?.name}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Resolution:</span>
-                            <span className="text-[#FAFAFA]">1080 × 1080px</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Format:</span>
-                            <span className="text-[#FAFAFA]">PNG</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Quality:</span>
-                            <span className="text-green-400">High</span>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="space-y-4">
-                      <SocialShare />
-                      
-                      <div className="bg-[#171717] rounded-xl p-4 border border-[#262626]">
-                        <h3 className="text-sm font-medium text-[#FAFAFA] mb-3">Need Changes?</h3>
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-xs font-medium text-[#A3A3A3] mb-1">Name</label>
-                            <input
-                              type="text"
-                              value={name}
-                              maxLength={30}
-                              onChange={(e) => {
-                                setName(e.target.value);
-                                // Clear current poster when editing
-                                setFinalPosterUrl('');
-                                setGenerationStatus('idle');
-                              }}
-                              className="w-full px-3 py-2 bg-[#262626] border border-[#404040] rounded-lg focus:ring-1 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-[#A3A3A3] mb-1">Title</label>
-                            <input
-                              type="text"
-                              value={title}
-                              maxLength={40}
-                              onChange={(e) => {
-                                setTitle(e.target.value);
-                                // Clear current poster when editing
-                                setFinalPosterUrl('');
-                                setGenerationStatus('idle');
-                              }}
-                              className="w-full px-3 py-2 bg-[#262626] border border-[#404040] rounded-lg focus:ring-1 focus:ring-[#737373] focus:border-[#737373] text-[#FAFAFA] text-sm"
-                            />
-                          </div>
-                          <button
-                            onClick={handleGeneratePoster}
-                            disabled={!name || !title || !photo.url}
-                            className="w-full py-2 bg-[#FAFAFA] text-[#0A0A0A] rounded-lg hover:bg-[#E5E5E5] disabled:bg-[#404040] disabled:text-[#737373] disabled:cursor-not-allowed transition-colors font-medium text-sm"
-                          >
-                            Regenerate Poster
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+            <div className="max-w-md mx-auto">
+              <PosterPreview 
+                showControls={!finalPosterUrl}
+                onGenerate={handleGeneratePoster}
+              />
+              {finalPosterUrl && <SocialShare />}
             </div>
           </div>
         )}
 
 
-        {/* Navigation - Only show for preview step */}
-        {currentStep === 'preview' && finalPosterUrl && (
-          <div className="flex justify-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[#262626]">
+        {/* Navigation */}
+        {currentStep !== 'template' && (
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[#262626] space-y-3 sm:space-y-0">
             <button
-              onClick={() => {
-                // Clear poster and restart
-                usePosterStore.getState().reset();
-                useSessionStore.getState().reset();
-                useSupporterStore.getState().reset();
-                useTemplateStore.getState().setSelectedTemplate(null);
-              }}
-              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] transition-colors font-medium min-h-[44px]"
+              onClick={previousStep}
+              className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] transition-colors font-medium min-h-[44px]"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Start Over
+              Previous
             </button>
+            
+            {currentStep === 'preview' && finalPosterUrl ? (
+              <button
+                onClick={() => {
+                  // Clear poster and restart
+                  usePosterStore.getState().reset();
+                  useSessionStore.getState().reset();
+                  useSupporterStore.getState().reset();
+                  useTemplateStore.getState().setSelectedTemplate(null);
+                }}
+                className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] transition-colors font-medium min-h-[44px]"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Start Over
+              </button>
+            ) : currentStep !== 'preview' ? (
+              <button
+                onClick={nextStep}
+                disabled={!canProceed()}
+                className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+              >
+                Next
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            ) : null}
           </div>
         )}
       </main>
