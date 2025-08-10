@@ -100,17 +100,18 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
             <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
               <button
                 onClick={() => handleCategorySelect(null)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all min-h-[44px] ${
+                className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full sm:rounded-xl text-xs sm:text-sm font-medium transition-all min-h-[36px] sm:min-h-[44px] ${
                   selectedCategory === null
                     ? 'bg-[#FAFAFA] text-[#0A0A0A] shadow-lg'
                     : 'bg-[#262626] text-[#FAFAFA] hover:bg-[#404040] border border-[#404040]'
                 }`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                All Templates
-                <span className="bg-current bg-opacity-20 px-2 py-0.5 rounded-full text-xs">
+                <span className="hidden sm:inline">All Templates</span>
+                <span className="sm:hidden">All</span>
+                <span className="bg-current bg-opacity-20 px-1.5 sm:px-2 py-0.5 rounded-full text-xs">
                   {filteredTemplates.length}
                 </span>
               </button>
@@ -118,13 +119,13 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
                 <button
                   key={category}
                   onClick={() => handleCategorySelect(category)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all min-h-[44px] ${
+                  className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full sm:rounded-xl text-xs sm:text-sm font-medium transition-all min-h-[36px] sm:min-h-[44px] ${
                     selectedCategory === category
                       ? 'bg-[#FAFAFA] text-[#0A0A0A] shadow-lg'
                       : 'bg-[#262626] text-[#FAFAFA] hover:bg-[#404040] border border-[#404040]'
                   }`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
                   {category}
