@@ -91,7 +91,7 @@ export default function TemplateGallery({ onTemplateSelect }: TemplateGalleryPro
             </svg>
             <span className="text-sm font-medium text-[#A3A3A3] uppercase tracking-wide">Template Gallery</span>
           </div>
-          <p className="text-[#A3A3A3] text-sm">Choose a design that matches your campaign style</p>
+          <p className="text-[#A3A3A3] text-sm">Choose your campaign poster</p>
         </div>
 
         {/* Category Filter */}

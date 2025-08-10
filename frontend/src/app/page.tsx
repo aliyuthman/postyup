@@ -247,7 +247,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-[#FAFAFA]">Postyup</h1>
-              <p className="text-[#A3A3A3] text-xs sm:text-sm mt-0.5">Create your political poster in minutes</p>
+              <p className="text-[#A3A3A3] text-xs sm:text-sm mt-0.5">Create political posters</p>
             </div>
           </div>
         </div>
@@ -290,11 +290,6 @@ export default function Home() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {currentStep === 'template' && (
           <div className="space-y-4 sm:space-y-6">
-            <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Choose your template</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Select a poster design that fits your campaign</p>
-            </div>
-            
             <TemplateGallery onTemplateSelect={handleTemplateSelect} />
           </div>
         )}
@@ -302,8 +297,8 @@ export default function Home() {
         {currentStep === 'photo' && (
           <div className="max-w-md mx-auto space-y-4 sm:space-y-6">
             <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Add your photo</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Upload a clear photo of yourself</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Add Photo</h2>
+              <p className="text-[#A3A3A3] text-sm sm:text-base">Upload your photo</p>
             </div>
             
             {!showCropper ? (
@@ -320,8 +315,8 @@ export default function Home() {
         {currentStep === 'details' && (
           <div className="max-w-md mx-auto space-y-4 sm:space-y-6">
             <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Tell us about yourself</h2>
-              <p className="text-[#A3A3A3] text-sm sm:text-base">Enter your details to complete your poster</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">Your Details</h2>
+              <p className="text-[#A3A3A3] text-sm sm:text-base">Enter your information</p>
             </div>
             
             <div className="space-y-4">
