@@ -17,15 +17,25 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
 
   // Check for camera support on mount
   useEffect(() => {
-    const checkCameraSupport = async () => {
+    const checkCameraSupport = () => {
       try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          // Check if we can access camera (basic check)
-          const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-          setHasCamera(isMobileDevice || hasTouchScreen);
+        // Check if we have media devices API and basic camera support
+        const hasMediaDevices = typeof navigator !== 'undefined' && 
+          navigator.mediaDevices && 
+          typeof navigator.mediaDevices.getUserMedia === 'function';
+        
+        if (hasMediaDevices) {
+          // Check if it's likely a mobile device or has touch capability
+          const isMobileDevice = typeof navigator !== 'undefined' && 
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          const hasTouchScreen = typeof window !== 'undefined' && 
+            ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
+          
+          setHasCamera(Boolean(isMobileDevice || hasTouchScreen));
+        } else {
+          setHasCamera(false);
         }
-      } catch (error) {
+      } catch {
         setHasCamera(false);
       }
     };

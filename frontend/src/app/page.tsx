@@ -188,27 +188,6 @@ export default function Home() {
     }
   };
 
-  const getValidationMessage = () => {
-    switch (currentStep) {
-      case 'template':
-        if (!useTemplateStore.getState().selectedTemplate) return 'Please select a template';
-        return '';
-      case 'photo':
-        if (!photo.url) return 'Please upload a photo';
-        if (showCropper) return 'Please complete photo cropping';
-        return '';
-      case 'details':
-        if (!name.trim()) return 'Please enter your name';
-        if (name.trim().length < 2) return 'Name must be at least 2 characters';
-        if (!title.trim()) return 'Please enter your title/role';
-        if (title.trim().length < 2) return 'Title must be at least 2 characters';
-        return '';
-      case 'preview':
-        return ''; // No validation needed on final step
-      default:
-        return '';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] relative">
@@ -226,7 +205,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold text-[#FAFAFA] mb-2">Creating Your Poster</h3>
                 <p className="text-[#A3A3A3] text-sm mb-4 leading-relaxed">
-                  We're processing your photo and generating a high-quality 1080×1080 poster. This usually takes 15-30 seconds.
+                  We&apos;re processing your photo and generating a high-quality 1080×1080 poster. This usually takes 15-30 seconds.
                 </p>
                 <div className="bg-[#262626] rounded-lg p-3">
                   <div className="flex items-center justify-center gap-2 text-xs text-[#737373]">
