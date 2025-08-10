@@ -308,23 +308,15 @@ export default function PosterPreview({
         />
       </div>
       
-      {showControls && (
-        <div className="mt-3 sm:mt-4 space-y-3">
-          <div className="text-xs sm:text-sm text-[#A3A3A3] bg-[#262626] p-3 rounded-xl border border-[#404040]">
-            <p><span className="text-[#FAFAFA] font-medium">Name:</span> {name || 'Not set'}</p>
-            <p><span className="text-[#FAFAFA] font-medium">Title:</span> {title || 'Not set'}</p>
-            <p><span className="text-[#FAFAFA] font-medium">Template:</span> {selectedTemplate.name}</p>
-          </div>
-          
-          {onGenerate && (
-            <button
-              onClick={onGenerate}
-              disabled={!name || !title || !photo.url}
-              className="w-full py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:bg-[#404040] disabled:text-[#737373] disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
-            >
-              Generate Final Poster
-            </button>
-          )}
+      {showControls && onGenerate && (
+        <div className="mt-3 sm:mt-4">
+          <button
+            onClick={onGenerate}
+            disabled={!name || !title || !photo.url}
+            className="w-full py-3 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:bg-[#404040] disabled:text-[#737373] disabled:cursor-not-allowed transition-colors font-medium min-h-[44px]"
+          >
+            Generate Final Poster
+          </button>
         </div>
       )}
     </div>
