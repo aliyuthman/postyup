@@ -632,9 +632,12 @@ export class PosterService {
       
       const buffer = canvas.toBuffer('image/png');
       
+      // For title text, move it closer to name by reducing the gap
+      const adjustedTop = textZone.type === 'title' ? y - height - 6 : y - height;
+      
       return {
         input: buffer,
-        top: y - height, // Y coordinate is bottom of text box, so subtract height
+        top: adjustedTop,
         left: x,
       };
     } catch (error) {
