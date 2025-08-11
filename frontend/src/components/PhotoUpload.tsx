@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useSupporterStore } from '@/stores/supporterStore';
 
 interface PhotoUploadProps {
@@ -10,38 +10,9 @@ interface PhotoUploadProps {
 export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [hasCamera, setHasCamera] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { photo } = useSupporterStore();
 
-  // Check for camera support on mount
-  useEffect(() => {
-    const checkCameraSupport = () => {
-      try {
-        // Check if we have media devices API and basic camera support
-        const hasMediaDevices = typeof navigator !== 'undefined' && 
-          navigator.mediaDevices && 
-          typeof navigator.mediaDevices.getUserMedia === 'function';
-        
-        if (hasMediaDevices) {
-          // Check if it's likely a mobile device or has touch capability
-          const isMobileDevice = typeof navigator !== 'undefined' && 
-            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          const hasTouchScreen = typeof window !== 'undefined' && 
-            ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
-          
-          setHasCamera(Boolean(isMobileDevice || hasTouchScreen));
-        } else {
-          setHasCamera(false);
-        }
-      } catch {
-        setHasCamera(false);
-      }
-    };
-    
-    checkCameraSupport();
-  }, []);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -103,12 +74,6 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
     }
   };
 
-  const handleCameraCapture = () => {
-    if (cameraInputRef.current) {
-      cameraInputRef.current.value = ''; // Clear previous selection
-      cameraInputRef.current.click();
-    }
-  };
 
   return (
     <div className="w-full">
@@ -117,14 +82,6 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
         ref={inputRef}
         type="file"
         accept="image/*"
-        onChange={handleChange}
-        className="hidden"
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
         onChange={handleChange}
         className="hidden"
       />
@@ -156,18 +113,6 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
                 </svg>
                 Change Photo
               </button>
-              {hasCamera && (
-                <button
-                  onClick={handleCameraCapture}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-[#404040] text-[#FAFAFA] rounded-lg hover:bg-[#525252] transition-colors font-medium text-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Take New
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -226,7 +171,7 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
                 </div>
               </div>
 
-              <div className={`grid gap-3 ${hasCamera ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+              <div className="grid gap-3 grid-cols-1">
                 <button
                   onClick={openFileSelector}
                   className="flex items-center justify-center gap-3 px-6 py-4 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] transition-all duration-200 font-semibold min-h-[56px] shadow-sm hover:shadow-md"
@@ -236,26 +181,8 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
                   </svg>
                   Browse Files
                 </button>
-                
-                {hasCamera && (
-                  <button
-                    onClick={handleCameraCapture}
-                    className="flex items-center justify-center gap-3 px-6 py-4 bg-[#262626] text-[#FAFAFA] rounded-xl hover:bg-[#404040] transition-all duration-200 font-semibold min-h-[56px] border border-[#404040] hover:border-[#525252]"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Take Photo
-                  </button>
-                )}
               </div>
 
-              {hasCamera && (
-                <p className="text-center text-xs text-[#737373] mt-3">
-                  📱 Camera detected - you can take a photo directly
-                </p>
-              )}
             </div>
           )}
         </div>
