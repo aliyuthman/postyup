@@ -523,7 +523,7 @@ export class PosterService {
     if (spaceCount === 0) {
       // Single name: increase until it fits width nicely
       for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
-        ctx.font = `700 ${size}px Inter`;
+        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
         if (ctx.measureText(name).width <= maxWidth * 0.9) { // Leave 10% margin
           optimalSize = size;
         } else {
@@ -534,7 +534,7 @@ export class PosterService {
       // First Last: increase until Last breaks to second line
       const [first] = words;
       for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
-        ctx.font = `700 ${size}px Inter`;
+        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
         const fullWidth = ctx.measureText(name).width;
         const firstWidth = ctx.measureText(first).width;
         
@@ -553,7 +553,7 @@ export class PosterService {
       const beforeLast = words.slice(0, -1).join(' ');
       
       for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
-        ctx.font = `700 ${size}px Inter`;
+        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
         const beforeLastWidth = ctx.measureText(beforeLast).width;
         const fullWidth = ctx.measureText(name).width;
         
@@ -610,34 +610,21 @@ export class PosterService {
       const canvas = createCanvas(width, height);
       const ctx = canvas.getContext('2d');
       
-      // Set text properties with optimal font size
-      ctx.font = `${textZone.fontWeight || '400'} ${optimalFontSize}px ${textZone.fontFamily || 'Arial'}`;
+      // Set text properties with optimal font size (match frontend exactly)
+      ctx.font = `${textZone.fontWeight || '400'} ${optimalFontSize}px '${textZone.fontFamily || 'Inter'}', Arial, sans-serif`;
       ctx.fillStyle = textZone.color || '#000000';
       ctx.textAlign = textZone.textAlign || 'left';
       
-      // Simple text wrapping using display text
-      const words = displayText.split(' ');
-      const lines = [];
-      let currentLine = '';
+      // Note: letterSpacing is not supported in Node.js canvas, but the font scaling will compensate
       
-      for (const word of words) {
-        const testLine = currentLine + (currentLine ? ' ' : '') + word;
-        const testWidth = ctx.measureText(testLine).width;
-        
-        if (testWidth > width && currentLine) {
-          lines.push(currentLine);
-          currentLine = word;
-        } else {
-          currentLine = testLine;
-        }
-      }
-      if (currentLine) lines.push(currentLine);
+      // Use intelligent text wrapping (same as frontend)
+      const lines = this.intelligentWrapText(ctx, displayText, width);
       
-      // Render text lines with optimal font size
+      // Render text lines with optimal font size (same as frontend logic)
       const lineHeight = optimalFontSize * 1.2;
       lines.forEach((line, index) => {
-        const lineY = optimalFontSize + (index * lineHeight);
-        if (lineY <= height) {
+        const lineY = height - (lines.length * lineHeight) + (index * lineHeight) + optimalFontSize;
+        if (lineY >= optimalFontSize && lineY <= height) {
           ctx.fillText(line, 0, lineY);
         }
       });

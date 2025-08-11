@@ -91,7 +91,10 @@ export default function Home() {
 
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template);
-    nextStep();
+    // Show visual feedback for 1.5 seconds before transitioning
+    setTimeout(() => {
+      nextStep();
+    }, 1500);
   };
 
   const handleGeneratePoster = async () => {
