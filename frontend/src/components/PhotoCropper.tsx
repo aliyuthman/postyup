@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { useSupporterStore } from '@/stores/supporterStore';
 import { getCroppedImg } from '@/utils/cropImage';
+import { getCroppedImgRobust } from '@/utils/cropImageRobust';
 
 interface PhotoCropperProps {
   imageSrc: string;
@@ -34,9 +35,16 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
       console.log('Crop completed:', { croppedArea, croppedAreaPixels });
       
       try {
-        // Create cropped blob
-        const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
-        console.log('Created cropped blob:', croppedBlob);
+        // Try robust cropping first (using percentages), fallback to pixel-based
+        let croppedBlob: Blob;
+        try {
+          croppedBlob = await getCroppedImgRobust(imageSrc, croppedArea, croppedAreaPixels);
+          console.log('Created cropped blob using robust method:', croppedBlob);
+        } catch (robustError) {
+          console.warn('Robust cropping failed, falling back to pixel method:', robustError);
+          croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+          console.log('Created cropped blob using pixel method:', croppedBlob);
+        }
         
         // Store both crop data and the blob
         setCropData(
