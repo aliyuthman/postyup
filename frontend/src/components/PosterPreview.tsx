@@ -29,10 +29,15 @@ export default function PosterPreview({
     photoY: 1607,
     photoWidth: 305,
     photoHeight: 305,
-    textAreaLeft: 100,
-    textAreaBottom: 1567, // 40px above photo
+    // Name text positioning
+    nameX: 100,
+    nameY: 1400,
     nameFontSize: 58.33,
+    // Title text positioning  
+    titleX: 100,
+    titleY: 1500,
     titleFontSize: 50,
+    // General spacing
     textSpacing: 20
   });
 
@@ -53,26 +58,46 @@ export default function PosterPreview({
     ctx.lineWidth = 2;
     ctx.strokeRect(photoX, photoY, photoWidth, photoHeight);
     
-    // Draw text area outline
-    const textAreaLeft = (debugCoords.textAreaLeft / 2000) * canvasSize.width;
-    const textAreaBottom = (debugCoords.textAreaBottom / 2000) * canvasSize.height;
-    const textAreaWidth = canvasSize.width - (textAreaLeft * 2);
+    // Draw name text area outline
+    const nameX = (debugCoords.nameX / 2000) * canvasSize.width;
+    const nameY = (debugCoords.nameY / 2000) * canvasSize.height;
+    const nameWidth = canvasSize.width - (nameX * 2);
+    const nameFontSize = (debugCoords.nameFontSize / 2000) * canvasSize.width;
     
     ctx.strokeStyle = '#00ff00';
     ctx.lineWidth = 1;
-    ctx.strokeRect(textAreaLeft, textAreaBottom - 200, textAreaWidth, 200);
+    ctx.strokeRect(nameX, nameY - nameFontSize, nameWidth, nameFontSize + 10);
+    
+    // Draw title text area outline
+    const titleX = (debugCoords.titleX / 2000) * canvasSize.width;
+    const titleY = (debugCoords.titleY / 2000) * canvasSize.height;
+    const titleWidth = canvasSize.width - (titleX * 2);
+    const titleFontSize = (debugCoords.titleFontSize / 2000) * canvasSize.width;
+    
+    ctx.strokeStyle = '#0080ff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(titleX, titleY - titleFontSize, titleWidth, titleFontSize + 10);
     
     // Draw coordinate labels
     ctx.fillStyle = '#ffffff';
-    ctx.font = '12px Arial';
-    ctx.fillRect(photoX, photoY - 20, 120, 18);
-    ctx.fillStyle = '#000000';
-    ctx.fillText(`Photo: ${debugCoords.photoX}, ${debugCoords.photoY}`, photoX + 2, photoY - 5);
+    ctx.font = '10px Arial';
     
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(textAreaLeft, textAreaBottom - 220, 100, 18);
+    // Photo label
+    ctx.fillRect(photoX, photoY - 20, 120, 16);
     ctx.fillStyle = '#000000';
-    ctx.fillText(`Text: ${debugCoords.textAreaLeft}`, textAreaLeft + 2, textAreaBottom - 205);
+    ctx.fillText(`Photo: ${debugCoords.photoX}, ${debugCoords.photoY}`, photoX + 2, photoY - 7);
+    
+    // Name label
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(nameX, nameY - nameFontSize - 35, 100, 16);
+    ctx.fillStyle = '#000000';
+    ctx.fillText(`Name: ${debugCoords.nameX}, ${debugCoords.nameY}`, nameX + 2, nameY - nameFontSize - 22);
+    
+    // Title label
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(titleX, titleY - titleFontSize - 35, 100, 16);
+    ctx.fillStyle = '#000000';
+    ctx.fillText(`Title: ${debugCoords.titleX}, ${debugCoords.titleY}`, titleX + 2, titleY - titleFontSize - 22);
     
     ctx.restore();
   }, [debugCoords]);
@@ -85,76 +110,96 @@ export default function PosterPreview({
   ) => {
     if (!content.name || !content.title) return;
     
-    // Define text area above the photo (positioned at bottom left)
-    const textAreaMargin = debugMode ? (debugCoords.textAreaLeft / 2000) * canvasSize.width : (100 / 2000) * canvasSize.width; // Left margin matching backend
-    const textAreaWidth = canvasSize.width - (textAreaMargin * 2);
-    // Photo is at Y: 1607, so position text above it
-    const photoY = debugMode ? (debugCoords.photoY / 2000) * canvasSize.height : (1607 / 2000) * canvasSize.height;
-    const textAreaBottom = debugMode ? (debugCoords.textAreaBottom / 2000) * canvasSize.height : photoY - (40 / 2000) * canvasSize.height; // 40px gap above photo
-    
-    // Use exact Photoshop specifications for name text
-    // 14pt at 300 DPI = 58.33px, scaled for canvas size
-    const nameFontSize = debugMode ? (debugCoords.nameFontSize / 2000) * canvasSize.width : (58.33 / 2000) * canvasSize.width;
-    // 16pt line height at 300 DPI = 66.67px, scaled for canvas size  
-    const nameLineHeight = (66.67 / 2000) * canvasSize.width;
-    
-    // Use exact Photoshop specifications for role text
-    // 12pt at 300 DPI = 50px, scaled for canvas size
-    const roleFontSize = debugMode ? (debugCoords.titleFontSize / 2000) * canvasSize.width : (50 / 2000) * canvasSize.width;
-    // 14pt line height at 300 DPI = 58.33px, scaled for canvas size
-    const roleLineHeight = (58.33 / 2000) * canvasSize.width;
-    
-    // Name styling with exact specifications (Inter, 700 weight)
-    ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
-    ctx.fillStyle = '#1a1a1a';
-    ctx.textAlign = 'left';
-    // Character tracking -50 (approximately -0.05em)
-    ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
-    
-    // Intelligent text wrapping for name
-    const nameLines = intelligentWrapText(ctx, content.name, textAreaWidth);
-    const nameTotalHeight = nameLines.length * nameLineHeight;
-    
-    // Role styling with exact specifications (Inter, 400 weight, #605e5e color)
-    ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
-    ctx.fillStyle = '#605e5e';
-    ctx.letterSpacing = `${-0.025 * roleFontSize}px`; // Character tracking -25
-    
-    const roleLines = intelligentWrapText(ctx, content.title, textAreaWidth);
-    const roleTotalHeight = roleLines.length * roleLineHeight;
-    
-    // Dynamic spacing between name and role
-    const nameToRoleSpacing = calculateDynamicSpacing(nameLines.length, canvasSize.width);
-    
-    // Calculate total text block height
-    const totalTextHeight = nameTotalHeight + nameToRoleSpacing + roleTotalHeight;
-    
-    // Position text block at bottom
-    const textStartY = textAreaBottom - totalTextHeight;
-    
-    // Render name with exact specifications
-    ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
-    ctx.fillStyle = '#1a1a1a';
-    ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
-    let currentY = textStartY;
-    
-    nameLines.forEach(line => {
-      ctx.fillText(line, textAreaMargin, currentY);
-      currentY += nameLineHeight;
-    });
-    
-    // Add spacing
-    currentY += nameToRoleSpacing;
-    
-    // Render role with exact specifications
-    ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
-    ctx.fillStyle = '#605e5e';
-    ctx.letterSpacing = `${-0.025 * roleFontSize}px`; // Character tracking -25
-    
-    roleLines.forEach(line => {
-      ctx.fillText(line, textAreaMargin, currentY);
-      currentY += roleLineHeight;
-    });
+    if (debugMode) {
+      // Debug mode: Use separate positioning for name and title
+      
+      // RENDER NAME
+      const nameX = (debugCoords.nameX / 2000) * canvasSize.width;
+      const nameY = (debugCoords.nameY / 2000) * canvasSize.height;
+      const nameFontSize = (debugCoords.nameFontSize / 2000) * canvasSize.width;
+      const nameWidth = canvasSize.width - (nameX * 2);
+      
+      ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
+      ctx.fillStyle = '#1a1a1a';
+      ctx.textAlign = 'left';
+      ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
+      
+      const nameLines = intelligentWrapText(ctx, content.name, nameWidth);
+      nameLines.forEach((line, index) => {
+        ctx.fillText(line, nameX, nameY + (index * nameFontSize * 1.2));
+      });
+      
+      // RENDER TITLE
+      const titleX = (debugCoords.titleX / 2000) * canvasSize.width;
+      const titleY = (debugCoords.titleY / 2000) * canvasSize.height;
+      const titleFontSize = (debugCoords.titleFontSize / 2000) * canvasSize.width;
+      const titleWidth = canvasSize.width - (titleX * 2);
+      
+      ctx.font = `400 ${titleFontSize}px 'Inter', Arial, sans-serif`;
+      ctx.fillStyle = '#605e5e';
+      ctx.letterSpacing = `${-0.025 * titleFontSize}px`;
+      
+      const titleLines = intelligentWrapText(ctx, content.title, titleWidth);
+      titleLines.forEach((line, index) => {
+        ctx.fillText(line, titleX, titleY + (index * titleFontSize * 1.2));
+      });
+      
+    } else {
+      // Normal mode: Use original positioning logic
+      const textAreaMargin = (100 / 2000) * canvasSize.width;
+      const textAreaWidth = canvasSize.width - (textAreaMargin * 2);
+      const photoY = (1607 / 2000) * canvasSize.height;
+      const textAreaBottom = photoY - (40 / 2000) * canvasSize.height;
+      
+      const nameFontSize = (58.33 / 2000) * canvasSize.width;
+      const nameLineHeight = (66.67 / 2000) * canvasSize.width;
+      const roleFontSize = (50 / 2000) * canvasSize.width;
+      const roleLineHeight = (58.33 / 2000) * canvasSize.width;
+      
+      // Name styling
+      ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
+      ctx.fillStyle = '#1a1a1a';
+      ctx.textAlign = 'left';
+      ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
+      
+      const nameLines = intelligentWrapText(ctx, content.name, textAreaWidth);
+      const nameTotalHeight = nameLines.length * nameLineHeight;
+      
+      // Role styling
+      ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
+      ctx.fillStyle = '#605e5e';
+      ctx.letterSpacing = `${-0.025 * roleFontSize}px`;
+      
+      const roleLines = intelligentWrapText(ctx, content.title, textAreaWidth);
+      const roleTotalHeight = roleLines.length * roleLineHeight;
+      
+      const nameToRoleSpacing = calculateDynamicSpacing(nameLines.length, canvasSize.width);
+      const totalTextHeight = nameTotalHeight + nameToRoleSpacing + roleTotalHeight;
+      const textStartY = textAreaBottom - totalTextHeight;
+      
+      // Render name
+      ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
+      ctx.fillStyle = '#1a1a1a';
+      ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
+      let currentY = textStartY;
+      
+      nameLines.forEach(line => {
+        ctx.fillText(line, textAreaMargin, currentY);
+        currentY += nameLineHeight;
+      });
+      
+      currentY += nameToRoleSpacing;
+      
+      // Render role
+      ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
+      ctx.fillStyle = '#605e5e';
+      ctx.letterSpacing = `${-0.025 * roleFontSize}px`;
+      
+      roleLines.forEach(line => {
+        ctx.fillText(line, textAreaMargin, currentY);
+        currentY += roleLineHeight;
+      });
+    }
   }, [debugMode, debugCoords]);
 
   const renderPreview = useCallback(async () => {
@@ -373,86 +418,119 @@ export default function PosterPreview({
       )}
       
       {debugMode && (
-        <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl space-y-4">
+        <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl space-y-6">
           <h3 className="text-sm font-medium text-[#FAFAFA]">Debug Controls</h3>
           
-          <div className="grid grid-cols-2 gap-4">
-            {/* Photo Position Controls */}
-            <div className="space-y-2">
-              <label className="text-xs text-[#A3A3A3]">Photo X</label>
-              <input
-                type="number"
-                value={debugCoords.photoX}
-                onChange={(e) => setDebugCoords(prev => ({ ...prev, photoX: parseInt(e.target.value) || 0 }))}
-                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
-              />
+          {/* Photo Controls */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-medium text-[#ff6b6b]">📸 Photo Position (Red Box)</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Photo X</label>
+                <input
+                  type="number"
+                  value={debugCoords.photoX}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, photoX: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Photo Y</label>
+                <input
+                  type="number"
+                  value={debugCoords.photoY}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, photoY: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Photo Width</label>
+                <input
+                  type="number"
+                  value={debugCoords.photoWidth}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, photoWidth: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Photo Height</label>
+                <input
+                  type="number"
+                  value={debugCoords.photoHeight}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, photoHeight: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs text-[#A3A3A3]">Photo Y</label>
-              <input
-                type="number"
-                value={debugCoords.photoY}
-                onChange={(e) => setDebugCoords(prev => ({ ...prev, photoY: parseInt(e.target.value) || 0 }))}
-                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
-              />
+          </div>
+          
+          {/* Name Text Controls */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-medium text-[#51cf66]">👤 Name Text Position (Green Box)</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Name X</label>
+                <input
+                  type="number"
+                  value={debugCoords.nameX}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, nameX: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Name Y</label>
+                <input
+                  type="number"
+                  value={debugCoords.nameY}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, nameY: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Name Font Size</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={debugCoords.nameFontSize}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, nameFontSize: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs text-[#A3A3A3]">Photo Width</label>
-              <input
-                type="number"
-                value={debugCoords.photoWidth}
-                onChange={(e) => setDebugCoords(prev => ({ ...prev, photoWidth: parseInt(e.target.value) || 0 }))}
-                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-[#A3A3A3]">Photo Height</label>
-              <input
-                type="number"
-                value={debugCoords.photoHeight}
-                onChange={(e) => setDebugCoords(prev => ({ ...prev, photoHeight: parseInt(e.target.value) || 0 }))}
-                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
-              />
-            </div>
-            
-            {/* Text Position Controls */}
-            <div className="space-y-2">
-              <label className="text-xs text-[#A3A3A3]">Text Left</label>
-              <input
-                type="number"
-                value={debugCoords.textAreaLeft}
-                onChange={(e) => setDebugCoords(prev => ({ ...prev, textAreaLeft: parseInt(e.target.value) || 0 }))}
-                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-[#A3A3A3]">Text Bottom</label>
-              <input
-                type="number"
-                value={debugCoords.textAreaBottom}
-                onChange={(e) => setDebugCoords(prev => ({ ...prev, textAreaBottom: parseInt(e.target.value) || 0 }))}
-                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-[#A3A3A3]">Name Font Size</label>
-              <input
-                type="number"
-                step="0.1"
-                value={debugCoords.nameFontSize}
-                onChange={(e) => setDebugCoords(prev => ({ ...prev, nameFontSize: parseFloat(e.target.value) || 0 }))}
-                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-[#A3A3A3]">Title Font Size</label>
-              <input
-                type="number"
-                step="0.1"
-                value={debugCoords.titleFontSize}
-                onChange={(e) => setDebugCoords(prev => ({ ...prev, titleFontSize: parseFloat(e.target.value) || 0 }))}
-                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
-              />
+          </div>
+          
+          {/* Title Text Controls */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-medium text-[#4dabf7]">💼 Title Text Position (Blue Box)</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Title X</label>
+                <input
+                  type="number"
+                  value={debugCoords.titleX}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, titleX: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Title Y</label>
+                <input
+                  type="number"
+                  value={debugCoords.titleY}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, titleY: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Title Font Size</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={debugCoords.titleFontSize}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, titleFontSize: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
             </div>
           </div>
           
@@ -466,8 +544,8 @@ export default function PosterPreview({
             <button
               onClick={() => setDebugCoords({
                 photoX: 88, photoY: 1607, photoWidth: 305, photoHeight: 305,
-                textAreaLeft: 100, textAreaBottom: 1567,
-                nameFontSize: 58.33, titleFontSize: 50, textSpacing: 20
+                nameX: 100, nameY: 1400, nameFontSize: 58.33,
+                titleX: 100, titleY: 1500, titleFontSize: 50, textSpacing: 20
               })}
               className="px-3 py-1 text-xs bg-[#404040] text-[#FAFAFA] rounded hover:bg-[#505050]"
             >
