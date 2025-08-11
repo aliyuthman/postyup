@@ -603,7 +603,8 @@ export class PosterService {
         coordinates: { x, y, width, height },
         baseFontSize,
         optimalFontSize,
-        original: textZone
+        original: textZone,
+        calculatedTop: y - height
       });
       
       // Create canvas for text
