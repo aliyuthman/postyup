@@ -117,21 +117,24 @@ export default function PosterPreview({
     if (debugMode) {
       // Debug mode: Use separate positioning for name and title
       
-      // RENDER NAME
+      // RENDER NAME with smart font sizing
       const nameX = (debugCoords.nameX / 2000) * canvasSize.width;
       const nameY = (debugCoords.nameY / 2000) * canvasSize.height;
       const nameWidth = (debugCoords.nameWidth / 2000) * canvasSize.width;
       const nameHeight = (debugCoords.nameHeight / 2000) * canvasSize.height;
-      const nameFontSize = (debugCoords.nameFontSize / 2000) * canvasSize.width;
+      const baseNameFontSize = (debugCoords.nameFontSize / 2000) * canvasSize.width;
       
-      ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
+      // Calculate optimal font size for debug mode too
+      const optimalNameFontSize = calculateOptimalFontSize(ctx, content.name, baseNameFontSize, nameWidth);
+      
+      ctx.font = `700 ${optimalNameFontSize}px 'Inter', Arial, sans-serif`;
       ctx.fillStyle = '#1a1a1a';
       ctx.textAlign = 'left';
-      ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
+      ctx.letterSpacing = `${-0.05 * optimalNameFontSize}px`;
       
       const nameLines = intelligentWrapText(ctx, content.name, nameWidth);
       nameLines.forEach((line, index) => {
-        const lineY = nameY - nameHeight + (index * nameFontSize * 1.2) + nameFontSize;
+        const lineY = nameY - nameHeight + (index * optimalNameFontSize * 1.2) + optimalNameFontSize;
         if (lineY <= nameY) { // Only render if within the text box
           ctx.fillText(line, nameX, lineY);
         }
@@ -163,12 +166,15 @@ export default function PosterPreview({
         const titleZone = selectedTemplate.layoutConfig.textZones.find((zone: { type: string }) => zone.type === 'title');
         
         if (nameZone && titleZone) {
-          // RENDER NAME using database coordinates
+          // RENDER NAME using database coordinates with smart font sizing
           const nameX = (nameZone.x / 2000) * canvasSize.width;
           const nameY = (nameZone.y / 2000) * canvasSize.height;
           const nameWidth = (nameZone.width / 2000) * canvasSize.width;
           const nameHeight = (nameZone.height / 2000) * canvasSize.height;
-          const nameFontSize = (nameZone.fontSize / 2000) * canvasSize.width;
+          const baseNameFontSize = (nameZone.fontSize / 2000) * canvasSize.width;
+          
+          // Calculate optimal font size based on name structure
+          const optimalNameFontSize = calculateOptimalFontSize(ctx, content.name, baseNameFontSize, nameWidth);
           
           // Debug logging for production coordinates
           console.log('Production text positioning:', {
@@ -177,15 +183,15 @@ export default function PosterPreview({
             calculated: { nameX, nameY, nameWidth, nameHeight, nameFontSize }
           });
           
-          ctx.font = `${nameZone.fontWeight} ${nameFontSize}px '${nameZone.fontFamily}', Arial, sans-serif`;
+          ctx.font = `${nameZone.fontWeight} ${optimalNameFontSize}px '${nameZone.fontFamily}', Arial, sans-serif`;
           ctx.fillStyle = nameZone.color;
           ctx.textAlign = nameZone.textAlign as CanvasTextAlign;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ctx.letterSpacing = `${((nameZone as any).letterSpacing || 0) * nameFontSize}px`;
+          ctx.letterSpacing = `${((nameZone as any).letterSpacing || 0) * optimalNameFontSize}px`;
           
           const nameLines = intelligentWrapText(ctx, content.name, nameWidth);
           nameLines.forEach((line, index) => {
-            const lineY = nameY - nameHeight + (index * nameFontSize * 1.2) + nameFontSize;
+            const lineY = nameY - nameHeight + (index * optimalNameFontSize * 1.2) + optimalNameFontSize;
             if (lineY <= nameY) {
               ctx.fillText(line, nameX, lineY);
             }
@@ -354,6 +360,72 @@ export default function PosterPreview({
     }
   }, [renderPreview, debugCoords, debugMode, selectedTemplate]);
 
+
+  // Smart font sizing based on name structure
+  const calculateOptimalFontSize = (
+    ctx: CanvasRenderingContext2D,
+    name: string, 
+    baseFontSize: number,
+    maxWidth: number
+  ): number => {
+    const words = name.trim().split(' ');
+    const spaceCount = words.length - 1;
+    
+    let optimalSize = baseFontSize;
+    const maxIncrease = baseFontSize * 0.5; // Max 50% size increase
+    
+    if (spaceCount === 0) {
+      // Single name: increase until it fits width nicely
+      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
+        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
+        if (ctx.measureText(name).width <= maxWidth * 0.9) { // Leave 10% margin
+          optimalSize = size;
+        } else {
+          break;
+        }
+      }
+    } else if (spaceCount === 1) {
+      // First Last: increase until Last breaks to second line
+      const [first, last] = words;
+      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
+        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
+        const fullWidth = ctx.measureText(name).width;
+        const firstWidth = ctx.measureText(first).width;
+        
+        if (fullWidth > maxWidth && firstWidth <= maxWidth * 0.8) {
+          // Perfect: first name fits, full name doesn't
+          optimalSize = size;
+          break;
+        } else if (fullWidth <= maxWidth) {
+          optimalSize = size;
+        } else {
+          break;
+        }
+      }
+    } else if (spaceCount >= 2) {
+      // First Middle+ Last: increase until only Last breaks
+      const lastWord = words[words.length - 1];
+      const beforeLast = words.slice(0, -1).join(' ');
+      
+      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
+        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
+        const beforeLastWidth = ctx.measureText(beforeLast).width;
+        const fullWidth = ctx.measureText(name).width;
+        
+        if (fullWidth > maxWidth && beforeLastWidth <= maxWidth * 0.8) {
+          // Perfect: "First Middle" fits, full name doesn't
+          optimalSize = size;
+          break;
+        } else if (fullWidth <= maxWidth) {
+          optimalSize = size;
+        } else {
+          break;
+        }
+      }
+    }
+    
+    return optimalSize;
+  };
 
   // Intelligent text wrapping with visual balance
   const intelligentWrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
