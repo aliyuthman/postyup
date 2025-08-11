@@ -477,7 +477,7 @@ export default function PosterPreview({
         </div>
       )}
       
-      {debugMode && (
+      {debugMode && process.env.NODE_ENV === 'development' && (
         <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl space-y-6">
           <h3 className="text-sm font-medium text-[#FAFAFA]">Debug Controls</h3>
           
