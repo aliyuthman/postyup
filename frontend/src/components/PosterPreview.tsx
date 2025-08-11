@@ -157,60 +157,108 @@ export default function PosterPreview({
       });
       
     } else {
-      // Normal mode: Use original positioning logic
-      const textAreaMargin = (100 / 2000) * canvasSize.width;
-      const textAreaWidth = canvasSize.width - (textAreaMargin * 2);
-      const photoY = (1607 / 2000) * canvasSize.height;
-      const textAreaBottom = photoY - (40 / 2000) * canvasSize.height;
-      
-      const nameFontSize = (58.33 / 2000) * canvasSize.width;
-      const nameLineHeight = (66.67 / 2000) * canvasSize.width;
-      const roleFontSize = (50 / 2000) * canvasSize.width;
-      const roleLineHeight = (58.33 / 2000) * canvasSize.width;
-      
-      // Name styling
-      ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
-      ctx.fillStyle = '#1a1a1a';
-      ctx.textAlign = 'left';
-      ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
-      
-      const nameLines = intelligentWrapText(ctx, content.name, textAreaWidth);
-      const nameTotalHeight = nameLines.length * nameLineHeight;
-      
-      // Role styling
-      ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
-      ctx.fillStyle = '#605e5e';
-      ctx.letterSpacing = `${-0.025 * roleFontSize}px`;
-      
-      const roleLines = intelligentWrapText(ctx, content.title, textAreaWidth);
-      const roleTotalHeight = roleLines.length * roleLineHeight;
-      
-      const nameToRoleSpacing = calculateDynamicSpacing(nameLines.length, canvasSize.width);
-      const totalTextHeight = nameTotalHeight + nameToRoleSpacing + roleTotalHeight;
-      const textStartY = textAreaBottom - totalTextHeight;
-      
-      // Render name
-      ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
-      ctx.fillStyle = '#1a1a1a';
-      ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
-      let currentY = textStartY;
-      
-      nameLines.forEach(line => {
-        ctx.fillText(line, textAreaMargin, currentY);
-        currentY += nameLineHeight;
-      });
-      
-      currentY += nameToRoleSpacing;
-      
-      // Render role
-      ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
-      ctx.fillStyle = '#605e5e';
-      ctx.letterSpacing = `${-0.025 * roleFontSize}px`;
-      
-      roleLines.forEach(line => {
-        ctx.fillText(line, textAreaMargin, currentY);
-        currentY += roleLineHeight;
-      });
+      // Normal mode: Use database text zones if available
+      if (selectedTemplate?.layoutConfig?.textZones && selectedTemplate.layoutConfig.textZones.length >= 2) {
+        const nameZone = selectedTemplate.layoutConfig.textZones.find((zone: any) => zone.type === 'name');
+        const titleZone = selectedTemplate.layoutConfig.textZones.find((zone: any) => zone.type === 'title');
+        
+        if (nameZone && titleZone) {
+          // RENDER NAME using database coordinates
+          const nameX = (nameZone.x / 2000) * canvasSize.width;
+          const nameY = (nameZone.y / 2000) * canvasSize.height;
+          const nameWidth = (nameZone.width / 2000) * canvasSize.width;
+          const nameHeight = (nameZone.height / 2000) * canvasSize.height;
+          const nameFontSize = (nameZone.fontSize / 2000) * canvasSize.width;
+          
+          ctx.font = `${nameZone.fontWeight} ${nameFontSize}px '${nameZone.fontFamily}', Arial, sans-serif`;
+          ctx.fillStyle = nameZone.color;
+          ctx.textAlign = nameZone.textAlign as CanvasTextAlign;
+          ctx.letterSpacing = `${(nameZone as any).letterSpacing * nameFontSize}px`;
+          
+          const nameLines = intelligentWrapText(ctx, content.name, nameWidth);
+          nameLines.forEach((line, index) => {
+            const lineY = nameY - nameHeight + (index * nameFontSize * 1.2) + nameFontSize;
+            if (lineY <= nameY) {
+              ctx.fillText(line, nameX, lineY);
+            }
+          });
+          
+          // RENDER TITLE using database coordinates
+          const titleX = (titleZone.x / 2000) * canvasSize.width;
+          const titleY = (titleZone.y / 2000) * canvasSize.height;
+          const titleWidth = (titleZone.width / 2000) * canvasSize.width;
+          const titleHeight = (titleZone.height / 2000) * canvasSize.height;
+          const titleFontSize = (titleZone.fontSize / 2000) * canvasSize.width;
+          
+          ctx.font = `${titleZone.fontWeight} ${titleFontSize}px '${titleZone.fontFamily}', Arial, sans-serif`;
+          ctx.fillStyle = titleZone.color;
+          ctx.textAlign = titleZone.textAlign as CanvasTextAlign;
+          ctx.letterSpacing = `${(titleZone as any).letterSpacing * titleFontSize}px`;
+          
+          const titleLines = intelligentWrapText(ctx, content.title, titleWidth);
+          titleLines.forEach((line, index) => {
+            const lineY = titleY - titleHeight + (index * titleFontSize * 1.2) + titleFontSize;
+            if (lineY <= titleY) {
+              ctx.fillText(line, titleX, lineY);
+            }
+          });
+        }
+      } else {
+        // Fallback: Use original positioning logic if no text zones in database
+        const textAreaMargin = (100 / 2000) * canvasSize.width;
+        const textAreaWidth = canvasSize.width - (textAreaMargin * 2);
+        const photoY = (1607 / 2000) * canvasSize.height;
+        const textAreaBottom = photoY - (40 / 2000) * canvasSize.height;
+        
+        const nameFontSize = (58.33 / 2000) * canvasSize.width;
+        const nameLineHeight = (66.67 / 2000) * canvasSize.width;
+        const roleFontSize = (50 / 2000) * canvasSize.width;
+        const roleLineHeight = (58.33 / 2000) * canvasSize.width;
+        
+        // Name styling
+        ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
+        ctx.fillStyle = '#1a1a1a';
+        ctx.textAlign = 'left';
+        ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
+        
+        const nameLines = intelligentWrapText(ctx, content.name, textAreaWidth);
+        const nameTotalHeight = nameLines.length * nameLineHeight;
+        
+        // Role styling
+        ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
+        ctx.fillStyle = '#605e5e';
+        ctx.letterSpacing = `${-0.025 * roleFontSize}px`;
+        
+        const roleLines = intelligentWrapText(ctx, content.title, textAreaWidth);
+        const roleTotalHeight = roleLines.length * roleLineHeight;
+        
+        const nameToRoleSpacing = calculateDynamicSpacing(nameLines.length, canvasSize.width);
+        const totalTextHeight = nameTotalHeight + nameToRoleSpacing + roleTotalHeight;
+        const textStartY = textAreaBottom - totalTextHeight;
+        
+        // Render name
+        ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
+        ctx.fillStyle = '#1a1a1a';
+        ctx.letterSpacing = `${-0.05 * nameFontSize}px`;
+        let currentY = textStartY;
+        
+        nameLines.forEach(line => {
+          ctx.fillText(line, textAreaMargin, currentY);
+          currentY += nameLineHeight;
+        });
+        
+        currentY += nameToRoleSpacing;
+        
+        // Render role
+        ctx.font = `400 ${roleFontSize}px 'Inter', Arial, sans-serif`;
+        ctx.fillStyle = '#605e5e';
+        ctx.letterSpacing = `${-0.025 * roleFontSize}px`;
+        
+        roleLines.forEach(line => {
+          ctx.fillText(line, textAreaMargin, currentY);
+          currentY += roleLineHeight;
+        });
+      }
     }
   }, [debugMode, debugCoords]);
 

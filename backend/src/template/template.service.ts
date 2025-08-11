@@ -56,15 +56,44 @@ export class TemplateService {
           full: 'https://avaysnbvpbdpjdprxubu.supabase.co/storage/v1/object/public/template-assets/classic-endorsement-full.png',
         },
         layoutConfig: {
-          // Photo zone with exact Photoshop specifications (2000x2000 canvas)
+          // Photo zone with optimized debug coordinates (2000x2000 canvas)
           photoZones: [
             {
-              x: 88,      // Exact X position from Photoshop
-              y: 1607,    // Exact Y position from Photoshop  
-              width: 368, // Exact width from Photoshop
-              height: 368, // Exact height from Photoshop
-              borderRadius: 184, // Circular photo (368/2)
+              x: 102,     // Optimized X position from debug mode
+              y: 1617,    // Optimized Y position from debug mode
+              width: 330, // Optimized width from debug mode
+              height: 330, // Optimized height from debug mode
+              borderRadius: 165, // Circular photo (330/2)
             },
+          ],
+          // Text zones with optimized debug coordinates
+          textZones: [
+            {
+              type: 'name',
+              x: 500,     // Optimized name X position
+              y: 1785,    // Optimized name Y position (bottom of text box)
+              width: 843,  // Optimized name text box width
+              height: 160, // Optimized name text box height
+              fontSize: 58.33, // Optimized name font size
+              fontFamily: 'Inter',
+              fontWeight: '700',
+              color: '#1a1a1a',
+              textAlign: 'left',
+              letterSpacing: -0.05
+            },
+            {
+              type: 'title',
+              x: 500,     // Optimized title X position
+              y: 1973,    // Optimized title Y position (bottom of text box)
+              width: 660,  // Optimized title text box width
+              height: 160, // Optimized title text box height
+              fontSize: 50, // Optimized title font size
+              fontFamily: 'Inter',
+              fontWeight: '400',
+              color: '#605e5e',
+              textAlign: 'left',
+              letterSpacing: -0.025
+            }
           ],
         },
       },
@@ -79,12 +108,26 @@ export class TemplateService {
         layoutConfig: {
           photoZones: [
             {
-              x: 88,      // Consistent positioning across templates
-              y: 1607,    // Consistent positioning across templates
-              width: 368, // Consistent sizing across templates
-              height: 368,
-              borderRadius: 184, // Circular photo
+              x: 102,     // Consistent optimized positioning
+              y: 1617,    // Consistent optimized positioning
+              width: 330, // Consistent optimized sizing
+              height: 330,
+              borderRadius: 165, // Circular photo (330/2)
             },
+          ],
+          textZones: [
+            {
+              type: 'name',
+              x: 500, y: 1785, width: 843, height: 160,
+              fontSize: 58.33, fontFamily: 'Inter', fontWeight: '700',
+              color: '#1a1a1a', textAlign: 'left', letterSpacing: -0.05
+            },
+            {
+              type: 'title',
+              x: 500, y: 1973, width: 660, height: 160,
+              fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
+              color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
+            }
           ],
         },
       },
@@ -99,12 +142,26 @@ export class TemplateService {
         layoutConfig: {
           photoZones: [
             {
-              x: 88,      // Consistent positioning across templates
-              y: 1607,    // Consistent positioning across templates
-              width: 368, // Consistent sizing across templates
-              height: 368,
-              borderRadius: 184, // Circular photo
+              x: 102,     // Consistent optimized positioning
+              y: 1617,    // Consistent optimized positioning
+              width: 330, // Consistent optimized sizing
+              height: 330,
+              borderRadius: 165, // Circular photo (330/2)
             },
+          ],
+          textZones: [
+            {
+              type: 'name',
+              x: 500, y: 1785, width: 843, height: 160,
+              fontSize: 58.33, fontFamily: 'Inter', fontWeight: '700',
+              color: '#1a1a1a', textAlign: 'left', letterSpacing: -0.05
+            },
+            {
+              type: 'title',
+              x: 500, y: 1973, width: 660, height: 160,
+              fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
+              color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
+            }
           ],
         },
       },
@@ -119,12 +176,26 @@ export class TemplateService {
         layoutConfig: {
           photoZones: [
             {
-              x: 88,      // Consistent positioning across templates
-              y: 1607,    // Consistent positioning across templates
-              width: 368, // Consistent sizing across templates
-              height: 368,
-              borderRadius: 184, // Circular photo
+              x: 102,     // Consistent optimized positioning
+              y: 1617,    // Consistent optimized positioning
+              width: 330, // Consistent optimized sizing
+              height: 330,
+              borderRadius: 165, // Circular photo (330/2)
             },
+          ],
+          textZones: [
+            {
+              type: 'name',
+              x: 500, y: 1785, width: 843, height: 160,
+              fontSize: 58.33, fontFamily: 'Inter', fontWeight: '700',
+              color: '#1a1a1a', textAlign: 'left', letterSpacing: -0.05
+            },
+            {
+              type: 'title',
+              x: 500, y: 1973, width: 660, height: 160,
+              fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
+              color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
+            }
           ],
         },
       },
