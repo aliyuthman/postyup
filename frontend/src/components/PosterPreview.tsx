@@ -34,7 +34,7 @@ export default function PosterPreview({
     nameY: 1400,
     nameWidth: 1800, // Text box width
     nameHeight: 100, // Text box height
-    nameFontSize: 58.33,
+    nameFontSize: 68,
     // Title text positioning and dimensions
     titleX: 100,
     titleY: 1500,
@@ -228,7 +228,7 @@ export default function PosterPreview({
         const photoY = (1607 / 2000) * canvasSize.height;
         const textAreaBottom = photoY - (40 / 2000) * canvasSize.height;
         
-        const nameFontSize = (58.33 / 2000) * canvasSize.width;
+        const nameFontSize = (68 / 2000) * canvasSize.width;
         const nameLineHeight = (66.67 / 2000) * canvasSize.width;
         const roleFontSize = (50 / 2000) * canvasSize.width;
         const roleLineHeight = (58.33 / 2000) * canvasSize.width;
@@ -364,70 +364,6 @@ export default function PosterPreview({
   }, [renderPreview, debugCoords, debugMode, selectedTemplate]);
 
 
-  // Smart font sizing based on name structure
-  const calculateOptimalFontSize = (
-    ctx: CanvasRenderingContext2D,
-    name: string, 
-    baseFontSize: number,
-    maxWidth: number
-  ): number => {
-    const words = name.trim().split(' ');
-    const spaceCount = words.length - 1;
-    
-    let optimalSize = baseFontSize;
-    const maxIncrease = baseFontSize * 1.0; // Max 100% size increase (doubled scaling)
-    
-    if (spaceCount === 0) {
-      // Single name: increase until it fits width nicely
-      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
-        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
-        if (ctx.measureText(name).width <= maxWidth * 0.9) { // Leave 10% margin
-          optimalSize = size;
-        } else {
-          break;
-        }
-      }
-    } else if (spaceCount === 1) {
-      // First Last: increase until Last breaks to second line
-      const [first] = words;
-      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
-        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
-        const fullWidth = ctx.measureText(name).width;
-        const firstWidth = ctx.measureText(first).width;
-        
-        if (fullWidth > maxWidth && firstWidth <= maxWidth * 0.8) {
-          // Perfect: first name fits, full name doesn't
-          optimalSize = size;
-          break;
-        } else if (fullWidth <= maxWidth) {
-          optimalSize = size;
-        } else {
-          break;
-        }
-      }
-    } else if (spaceCount >= 2) {
-      // First Middle+ Last: increase until only Last breaks
-      const beforeLast = words.slice(0, -1).join(' ');
-      
-      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
-        ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
-        const beforeLastWidth = ctx.measureText(beforeLast).width;
-        const fullWidth = ctx.measureText(name).width;
-        
-        if (fullWidth > maxWidth && beforeLastWidth <= maxWidth * 0.8) {
-          // Perfect: "First Middle" fits, full name doesn't
-          optimalSize = size;
-          break;
-        } else if (fullWidth <= maxWidth) {
-          optimalSize = size;
-        } else {
-          break;
-        }
-      }
-    }
-    
-    return optimalSize;
-  };
 
   // Intelligent text wrapping with visual balance
   const intelligentWrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {

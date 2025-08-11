@@ -99,7 +99,7 @@ export default function SocialShare() {
         };
       default:
         return {
-          text: finalPosterUrl ? 'Download High-Quality Poster' : 'Poster Not Ready',
+          text: finalPosterUrl ? 'Download your Ma\'ali\'s poster' : 'Poster Not Ready',
           icon: (
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-4-4m4 4l4-4m-6 8h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -143,21 +143,13 @@ export default function SocialShare() {
             downloadState === 'error' ? 'text-red-400' :
             'text-[#A3A3A3]'
           }`}>
-            {downloadState === 'downloading' && 'Preparing your high-quality poster...'}
+            {downloadState === 'downloading' && 'Preparing your Ma\'ali\'s poster...'}
             {downloadState === 'success' && '✓ Poster saved to your downloads!'}
             {downloadState === 'error' && 'Download failed. Please try again.'}
           </p>
         </div>
       )}
-      
-      {/* Default Message */}
-      {finalPosterUrl && downloadState === 'idle' && (
-        <div className="mt-3 text-center">
-          <p className="text-[#A3A3A3] text-sm">
-            Your poster is ready for download
-          </p>
-        </div>
-      )}
+    
       
       {process.env.NODE_ENV === 'development' && (
         <div className="mt-2 text-xs text-[#737373] text-center">

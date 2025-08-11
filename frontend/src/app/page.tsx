@@ -95,9 +95,12 @@ export default function Home() {
     }, 1500);
   };
 
+  const [generationStep, setGenerationStep] = useState<'upload' | 'crop' | 'generate'>('upload');
+
   const handleGeneratePoster = async () => {
     console.log('Starting poster generation...');
     setGenerationStatus('generating');
+    setGenerationStep('upload');
     
     try {
       // Auto-detect API URL based on environment
@@ -137,7 +140,34 @@ export default function Home() {
       const uploadData = await uploadResponse.json();
       console.log('Photo uploaded successfully:', uploadData.photoUrl);
       
+      // If crop data exists, apply cropping
+      let finalPhotoUrl = uploadData.photoUrl;
+      if (photo.croppedAreaPixels) {
+        setGenerationStep('crop');
+        console.log('Applying crop to photo...', photo.croppedAreaPixels);
+        const cropResponse = await fetch(`${apiUrl}/api/photo/crop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            photoUrl: uploadData.photoUrl,
+            cropParams: photo.croppedAreaPixels,
+            sessionId,
+          }),
+        });
+
+        if (!cropResponse.ok) {
+          const cropError = await cropResponse.text();
+          console.error('Photo crop failed:', cropError);
+          throw new Error(`Photo crop failed: ${cropResponse.status} - ${cropError}`);
+        }
+
+        const cropData = await cropResponse.json();
+        finalPhotoUrl = cropData.croppedPhotoUrl;
+        console.log('Photo cropped successfully:', finalPhotoUrl);
+      }
+      
       // Now generate the poster with the uploaded photo URL
+      setGenerationStep('generate');
       console.log('Generating poster...');
       const response = await fetch(`${apiUrl}/api/poster/generate`, {
         method: 'POST',
@@ -145,7 +175,7 @@ export default function Home() {
         body: JSON.stringify({
           templateId,
           supporterData: { name, title },
-          photoUrl: uploadData.photoUrl,
+          photoUrl: finalPhotoUrl,
           sessionId,
         }),
       });
@@ -220,12 +250,21 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold text-[#FAFAFA] mb-2">Creating Your Poster</h3>
                 <p className="text-[#A3A3A3] text-sm mb-4 leading-relaxed">
-                  We&apos;re processing your photo and generating poster. Just a second...
+                  {generationStep === 'upload' && 'Uploading your photo...'}
+                  {generationStep === 'crop' && 'Processing and cropping your photo...'}
+                  {generationStep === 'generate' && 'Generating your poster...'}
                 </p>
-                <div className="bg-[#262626] rounded-lg p-3">
+                <div className="bg-[#262626] rounded-lg p-3 space-y-3">
                   <div className="flex items-center justify-center gap-2 text-xs text-[#737373]">
                     <div className="w-2 h-2 bg-[#FAFAFA] rounded-full animate-pulse"></div>
                     <span>Please keep this tab open</span>
+                  </div>
+                  
+                  {/* Progress indicator */}
+                  <div className="flex justify-center items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${generationStep === 'upload' ? 'bg-[#FAFAFA] animate-pulse' : 'bg-[#404040]'}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${generationStep === 'crop' ? 'bg-[#FAFAFA] animate-pulse' : generationStep === 'generate' ? 'bg-[#737373]' : 'bg-[#404040]'}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${generationStep === 'generate' ? 'bg-[#FAFAFA] animate-pulse' : 'bg-[#404040]'}`}></div>
                   </div>
                 </div>
               </>
@@ -385,35 +424,51 @@ export default function Home() {
           <div className="space-y-4 sm:space-y-6">
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl font-bold text-[#FAFAFA] mb-2">
-                {finalPosterUrl ? 'Your poster is ready!' : 'Generating your poster...'}
+                {finalPosterUrl ? 'Your Ma\'ali\'s poster is ready!' : 'Generating your poster...'}
               </h2>
               <p className="text-[#A3A3A3] text-sm sm:text-base">
                 {finalPosterUrl 
-                  ? 'Download and share your professional poster' 
-                  : 'Please wait while we create your high-quality poster'}
+                  ? 'Download and share' 
+                  : 'Please wait while we create your Ma\'ali\'s poster'}
               </p>
             </div>
             
             <div className="max-w-md mx-auto space-y-4">
-              {finalPosterUrl ? (
-                <>
-                  {/* Show final poster */}
-                  <div className="aspect-square bg-[#262626] rounded-xl overflow-hidden border border-[#404040]">
-                    <img 
-                      src={finalPosterUrl} 
-                      alt="Your generated poster" 
-                      className="w-full h-full object-cover"
-                    />
+              <div className="aspect-square bg-[#262626] rounded-xl overflow-hidden border border-[#404040]">
+                {finalPosterUrl ? (
+                  <img 
+                    src={finalPosterUrl} 
+                    alt="Your generated poster" 
+                    className="w-full h-full object-cover"
+                    onLoad={() => {
+                      // Add a subtle fade-in effect
+                      const img = document.querySelector('img[alt="Your generated poster"]') as HTMLImageElement;
+                      if (img) {
+                        img.style.opacity = '0';
+                        img.style.transition = 'opacity 0.3s ease-in-out';
+                        setTimeout(() => {
+                          img.style.opacity = '1';
+                        }, 50);
+                      }
+                    }}
+                  />
+                ) : (
+                  /* Show loading state with skeleton */
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#404040] border-t-[#FAFAFA] mx-auto mb-4"></div>
+                      <p className="text-[#A3A3A3] text-sm">
+                        {generationStatus === 'generating' ? 'Creating your poster...' : 'Preparing your poster...'}
+                      </p>
+                    </div>
                   </div>
+                )}
+              </div>
+              
+              {/* Only show social share when poster is ready */}
+              {finalPosterUrl && (
+                <div className="animate-in fade-in duration-500">
                   <SocialShare />
-                </>
-              ) : (
-                /* Show loading state */
-                <div className="aspect-square bg-[#262626] rounded-xl overflow-hidden border border-[#404040] flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#404040] border-t-[#FAFAFA] mx-auto mb-4"></div>
-                    <p className="text-[#A3A3A3] text-sm">Creating your poster...</p>
-                  </div>
                 </div>
               )}
             </div>

@@ -13,6 +13,7 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { setCropData } = useSupporterStore();
 
   const onCropChange = useCallback((crop: { x: number; y: number }) => {
@@ -125,10 +126,20 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
         </div>
 
         <button
-          onClick={onCropComplete}
-          className="w-full py-3 sm:py-4 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] transition-colors font-semibold min-h-[44px] sm:min-h-[56px] text-sm sm:text-base"
+          onClick={() => {
+            setIsProcessing(true);
+            // Add small delay for better UX
+            setTimeout(() => {
+              onCropComplete();
+            }, 300);
+          }}
+          disabled={isProcessing}
+          className="w-full py-3 sm:py-4 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:bg-[#404040] disabled:text-[#A3A3A3] transition-colors font-semibold min-h-[44px] sm:min-h-[56px] text-sm sm:text-base flex items-center justify-center gap-2"
         >
-          Confirm Crop
+          {isProcessing && (
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A3A3A3] border-t-transparent"></div>
+          )}
+          {isProcessing ? 'Processing...' : 'Confirm Crop'}
         </button>
       </div>
     </div>
