@@ -170,6 +170,13 @@ export default function PosterPreview({
           const nameHeight = (nameZone.height / 2000) * canvasSize.height;
           const nameFontSize = (nameZone.fontSize / 2000) * canvasSize.width;
           
+          // Debug logging for production coordinates
+          console.log('Production text positioning:', {
+            canvasSize,
+            nameZone: { x: nameZone.x, y: nameZone.y, width: nameZone.width, height: nameZone.height, fontSize: nameZone.fontSize },
+            calculated: { nameX, nameY, nameWidth, nameHeight, nameFontSize }
+          });
+          
           ctx.font = `${nameZone.fontWeight} ${nameFontSize}px '${nameZone.fontFamily}', Arial, sans-serif`;
           ctx.fillStyle = nameZone.color;
           ctx.textAlign = nameZone.textAlign as CanvasTextAlign;
@@ -477,7 +484,7 @@ export default function PosterPreview({
         </div>
       )}
       
-      {debugMode && process.env.NODE_ENV === 'development' && (
+      {debugMode && typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
         <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl space-y-6">
           <h3 className="text-sm font-medium text-[#FAFAFA]">Debug Controls</h3>
           

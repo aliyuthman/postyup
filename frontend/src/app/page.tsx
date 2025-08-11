@@ -382,7 +382,7 @@ export default function Home() {
             
             <div className="max-w-md mx-auto space-y-4">
               {/* Debug Toggle - Only show in development */}
-              {process.env.NODE_ENV === 'development' && (
+              {typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
                 <div className="flex justify-center">
                   <button
                     onClick={() => setDebugMode(!debugMode)}
