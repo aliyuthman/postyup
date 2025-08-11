@@ -159,8 +159,8 @@ export default function PosterPreview({
     } else {
       // Normal mode: Use database text zones if available
       if (selectedTemplate?.layoutConfig?.textZones && selectedTemplate.layoutConfig.textZones.length >= 2) {
-        const nameZone = selectedTemplate.layoutConfig.textZones.find((zone: any) => zone.type === 'name');
-        const titleZone = selectedTemplate.layoutConfig.textZones.find((zone: any) => zone.type === 'title');
+        const nameZone = selectedTemplate.layoutConfig.textZones.find((zone: { type: string }) => zone.type === 'name');
+        const titleZone = selectedTemplate.layoutConfig.textZones.find((zone: { type: string }) => zone.type === 'title');
         
         if (nameZone && titleZone) {
           // RENDER NAME using database coordinates
@@ -180,7 +180,8 @@ export default function PosterPreview({
           ctx.font = `${nameZone.fontWeight} ${nameFontSize}px '${nameZone.fontFamily}', Arial, sans-serif`;
           ctx.fillStyle = nameZone.color;
           ctx.textAlign = nameZone.textAlign as CanvasTextAlign;
-          ctx.letterSpacing = `${(nameZone as any).letterSpacing * nameFontSize}px`;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ctx.letterSpacing = `${((nameZone as any).letterSpacing || 0) * nameFontSize}px`;
           
           const nameLines = intelligentWrapText(ctx, content.name, nameWidth);
           nameLines.forEach((line, index) => {
@@ -200,7 +201,8 @@ export default function PosterPreview({
           ctx.font = `${titleZone.fontWeight} ${titleFontSize}px '${titleZone.fontFamily}', Arial, sans-serif`;
           ctx.fillStyle = titleZone.color;
           ctx.textAlign = titleZone.textAlign as CanvasTextAlign;
-          ctx.letterSpacing = `${(titleZone as any).letterSpacing * titleFontSize}px`;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ctx.letterSpacing = `${((titleZone as any).letterSpacing || 0) * titleFontSize}px`;
           
           const titleLines = intelligentWrapText(ctx, content.title, titleWidth);
           titleLines.forEach((line, index) => {
@@ -267,7 +269,7 @@ export default function PosterPreview({
         });
       }
     }
-  }, [debugMode, debugCoords]);
+  }, [debugMode, debugCoords, selectedTemplate]);
 
   const renderPreview = useCallback(async () => {
     if (!selectedTemplate || !canvasRef.current) return;
