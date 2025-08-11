@@ -603,8 +603,7 @@ export class PosterService {
         coordinates: { x, y, width, height },
         baseFontSize,
         optimalFontSize,
-        original: textZone,
-        calculatedTop: y - height
+        original: textZone
       });
       
       // Create canvas for text
@@ -632,12 +631,9 @@ export class PosterService {
       
       const buffer = canvas.toBuffer('image/png');
       
-      // For title text, move it closer to name by reducing the gap
-      const adjustedTop = textZone.type === 'title' ? y - height - 6 : y - height;
-      
       return {
         input: buffer,
-        top: adjustedTop,
+        top: y - height, // Y coordinate is bottom of text box, so subtract height
         left: x,
       };
     } catch (error) {

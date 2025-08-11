@@ -84,7 +84,7 @@ export class TemplateService {
             {
               type: 'title',
               x: 500,     // Optimized title X position
-              y: 1970,    // Optimized title Y position (bottom of text box) - moved 3px up
+              y: 1967,    // Optimized title Y position (bottom of text box) - moved 6px up from original
               width: 660,  // Optimized title text box width
               height: 160, // Optimized title text box height
               fontSize: 50, // Optimized title font size
@@ -124,7 +124,7 @@ export class TemplateService {
             },
             {
               type: 'title',
-              x: 500, y: 1970, width: 660, height: 160,
+              x: 500, y: 1967, width: 660, height: 160,
               fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
               color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
             }
@@ -158,7 +158,7 @@ export class TemplateService {
             },
             {
               type: 'title',
-              x: 500, y: 1970, width: 660, height: 160,
+              x: 500, y: 1967, width: 660, height: 160,
               fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
               color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
             }
@@ -192,7 +192,7 @@ export class TemplateService {
             },
             {
               type: 'title',
-              x: 500, y: 1970, width: 660, height: 160,
+              x: 500, y: 1967, width: 660, height: 160,
               fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
               color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
             }
