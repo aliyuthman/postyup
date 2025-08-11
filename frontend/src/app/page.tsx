@@ -142,9 +142,21 @@ export default function Home() {
       
       // If crop data exists, apply cropping
       let finalPhotoUrl = uploadData.photoUrl;
+      console.log('Photo data:', { 
+        hasFile: !!photo.file, 
+        hasUrl: !!photo.url, 
+        hasCropData: !!photo.cropData,
+        hasCroppedAreaPixels: !!photo.croppedAreaPixels,
+        cropData: photo.cropData,
+        croppedAreaPixels: photo.croppedAreaPixels
+      });
+      
       if (photo.croppedAreaPixels) {
         setGenerationStep('crop');
-        console.log('Applying crop to photo...', photo.croppedAreaPixels);
+        console.log('Applying crop to photo...', {
+          originalUrl: uploadData.photoUrl,
+          cropParams: photo.croppedAreaPixels
+        });
         const cropResponse = await fetch(`${apiUrl}/api/photo/crop`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -177,6 +189,7 @@ export default function Home() {
           supporterData: { name, title },
           photoUrl: finalPhotoUrl,
           sessionId,
+          isPhotoPreCropped: !!photo.croppedAreaPixels,
         }),
       });
 
