@@ -140,10 +140,17 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
             ) : (
               <>
                 <div className="mb-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-[#262626] rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#737373]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 bg-[#262626] rounded-full flex items-center justify-center border-2 border-[#404040] relative overflow-hidden">
+                    {/* Default profile avatar */}
+                    <svg className="w-12 h-12 sm:w-14 sm:h-14 text-[#737373]" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
+                    {/* Upload indicator overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-[#FAFAFA] mb-2">Add Your Photo</h3>
                   <p className="text-sm text-[#A3A3A3] mb-1">
@@ -177,9 +184,9 @@ export default function PhotoUpload({ onPhotoSelected }: PhotoUploadProps) {
                   className="flex items-center justify-center gap-3 px-6 py-4 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] transition-all duration-200 font-semibold min-h-[56px] shadow-sm hover:shadow-md"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  Browse Files
+                  Upload Photo
                 </button>
               </div>
 
