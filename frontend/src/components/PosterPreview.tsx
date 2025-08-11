@@ -214,8 +214,9 @@ export default function PosterPreview({
           
           const titleLines = intelligentWrapText(ctx, content.title, titleWidth);
           titleLines.forEach((line, index) => {
-            const lineY = titleY - titleHeight + (index * titleFontSize * 1.2) + titleFontSize;
-            if (lineY <= titleY) {
+            // Add 20px spacing between name and title for better visual separation
+            const lineY = titleY - titleHeight + (index * titleFontSize * 1.2) + titleFontSize + 20;
+            if (lineY <= titleY + 20) {
               ctx.fillText(line, titleX, lineY);
             }
           });
