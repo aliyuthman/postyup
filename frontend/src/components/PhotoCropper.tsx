@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
+import { useState, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { useSupporterStore } from '@/stores/supporterStore';
-import { getCroppedImg } from '@/utils/cropImage';
-import { getCroppedImgRobust } from '@/utils/cropImageRobust';
+
+// Dynamically import AvatarEditor to avoid SSR issues
+const AvatarEditor = dynamic(() => import('react-avatar-editor'), { ssr: false });
 
 interface PhotoCropperProps {
   imageSrc: string;
@@ -12,92 +13,86 @@ interface PhotoCropperProps {
 }
 
 export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperProps) {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
+  const [scale, setScale] = useState(1);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { setCropData, setCroppedBlob } = useSupporterStore();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editorRef = useRef<any>(null);
+  const { setPhoto } = useSupporterStore();
 
-  const onCropChange = useCallback((crop: { x: number; y: number }) => {
-    setCrop(crop);
-  }, []);
-
-  const onZoomChange = useCallback((zoom: number) => {
-    setZoom(zoom);
-  }, []);
-
-  const onRotationChange = useCallback((rotation: number) => {
-    setRotation(rotation);
-  }, []);
-
-  const onCropCompleteHandler = useCallback(
-    async (croppedArea: { x: number; y: number; width: number; height: number }, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => {
-      console.log('Crop completed:', { croppedArea, croppedAreaPixels });
+  const handleSave = () => {
+    if (editorRef.current) {
+      setIsProcessing(true);
       
-      try {
-        // Try robust cropping first (using percentages), fallback to pixel-based
-        let croppedBlob: Blob;
-        try {
-          croppedBlob = await getCroppedImgRobust(imageSrc, croppedArea, croppedAreaPixels);
-          console.log('Created cropped blob using robust method:', croppedBlob);
-        } catch (robustError) {
-          console.warn('Robust cropping failed, falling back to pixel method:', robustError);
-          croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
-          console.log('Created cropped blob using pixel method:', croppedBlob);
-        }
-        
-        // Store both crop data and the blob
-        setCropData(
-          {
-            x: croppedArea.x,
-            y: croppedArea.y,
-            width: croppedArea.width,
-            height: croppedArea.height,
-          },
-          croppedAreaPixels
-        );
-        setCroppedBlob(croppedBlob);
-      } catch (error) {
-        console.error('Failed to create cropped blob:', error);
-      }
-    },
-    [imageSrc, setCropData, setCroppedBlob]
-  );
+      // Get the cropped image as a canvas and convert to data URL
+      const canvas = editorRef.current.getImageScaledToCanvas();
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      
+      console.log('Created cropped image:', {
+        width: canvas.width,
+        height: canvas.height,
+        dataUrl: dataUrl.substring(0, 50) + '...'
+      });
+      
+      setPreview(dataUrl);
+      
+      // Store the cropped image as base64 in Zustand
+      setPhoto({
+        url: dataUrl,
+        file: undefined, // Clear the original file
+      });
+      
+      setIsEditing(false);
+      setIsProcessing(false);
+      
+      // Complete the crop process
+      setTimeout(() => {
+        onCropComplete();
+      }, 100);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  if (!isEditing && preview) {
+    return (
+      <div className="w-full max-w-lg mx-auto px-4">
+        <div className="space-y-4">
+          <div className="relative mx-auto w-64 h-64 overflow-hidden rounded-full border-4 border-[#404040]">
+            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+          </div>
+          <button
+            onClick={handleEdit}
+            className="w-full py-3 sm:py-4 bg-[#404040] text-[#FAFAFA] rounded-xl hover:bg-[#525252] transition-colors font-semibold min-h-[44px] sm:min-h-[56px] text-sm sm:text-base"
+          >
+            Edit Image
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-lg mx-auto px-4">
-      <div className="relative w-full h-64 sm:h-80 md:h-96 bg-[#262626] rounded-2xl overflow-hidden border border-[#404040]">
-        <Cropper
-          image={imageSrc}
-          crop={crop}
-          zoom={zoom}
-          rotation={rotation}
-          aspect={1}
-          onCropChange={onCropChange}
-          onZoomChange={onZoomChange}
-          onRotationChange={onRotationChange}
-          onCropComplete={onCropCompleteHandler}
-          showGrid={false}
-          cropShape="round"
-          style={{
-            containerStyle: {
-              width: '100%',
-              height: '100%',
-              position: 'relative'
-            },
-            cropAreaStyle: {
-              border: '2px solid #FAFAFA',
-              borderRadius: '50%'
-            },
-            mediaStyle: {
-              width: '100%',
-              height: '100%'
-            }
-          }}
-        />
-      </div>
+      <div className="space-y-4">
+        <div className="relative mx-auto overflow-hidden rounded-2xl border border-[#404040] bg-[#262626]">
+          <AvatarEditor
+            // @ts-expect-error - AvatarEditor ref not properly typed
+            ref={editorRef}
+            image={imageSrc}
+            width={300}
+            height={300}
+            border={25}
+            borderRadius={150} // Make it circular
+            color={[38, 38, 38, 0.6]} // Semi-transparent background
+            scale={scale}
+            rotate={0}
+          />
+        </div>
 
-      <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-[#FAFAFA] mb-2">
             Zoom
@@ -107,12 +102,12 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
               type="range"
               min={1}
               max={3}
-              step={0.1}
-              value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
+              step={0.01}
+              value={scale}
+              onChange={(e) => setScale(parseFloat(e.target.value))}
               className="w-full h-2 bg-[#404040] rounded-lg appearance-none cursor-pointer slider"
               style={{
-                background: `linear-gradient(to right, #FAFAFA 0%, #FAFAFA ${((zoom - 1) / 2) * 100}%, #404040 ${((zoom - 1) / 2) * 100}%, #404040 100%)`
+                background: `linear-gradient(to right, #FAFAFA 0%, #FAFAFA ${((scale - 1) / 2) * 100}%, #404040 ${((scale - 1) / 2) * 100}%, #404040 100%)`
               }}
             />
             <div className="flex justify-between text-xs text-[#A3A3A3] mt-1">
@@ -122,45 +117,12 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-[#FAFAFA] mb-2">
-            Rotation
-          </label>
-          <div className="relative">
-            <input
-              type="range"
-              min={0}
-              max={360}
-              step={1}
-              value={rotation}
-              onChange={(e) => setRotation(Number(e.target.value))}
-              className="w-full h-2 bg-[#404040] rounded-lg appearance-none cursor-pointer slider"
-              style={{
-                background: `linear-gradient(to right, #FAFAFA 0%, #FAFAFA ${(rotation / 360) * 100}%, #404040 ${(rotation / 360) * 100}%, #404040 100%)`
-              }}
-            />
-            <div className="flex justify-between text-xs text-[#A3A3A3] mt-1">
-              <span>0°</span>
-              <span>360°</span>
-            </div>
-          </div>
-        </div>
-
         <button
-          onClick={() => {
-            setIsProcessing(true);
-            // Add small delay for better UX
-            setTimeout(() => {
-              onCropComplete();
-            }, 300);
-          }}
+          onClick={handleSave}
           disabled={isProcessing}
           className="w-full py-3 sm:py-4 bg-[#FAFAFA] text-[#0A0A0A] rounded-xl hover:bg-[#E5E5E5] disabled:bg-[#404040] disabled:text-[#A3A3A3] transition-colors font-semibold min-h-[44px] sm:min-h-[56px] text-sm sm:text-base flex items-center justify-center gap-2"
         >
-          {isProcessing && (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A3A3A3] border-t-transparent"></div>
-          )}
-          {isProcessing ? 'Processing...' : 'Confirm Crop'}
+          {isProcessing ? 'Processing...' : 'Apply Crop'}
         </button>
       </div>
     </div>

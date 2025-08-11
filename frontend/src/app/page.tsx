@@ -140,45 +140,16 @@ export default function Home() {
       const uploadData = await uploadResponse.json();
       console.log('Photo uploaded successfully:', uploadData.photoUrl);
       
-      // Use cropped blob if available, otherwise use original photo
-      let finalPhotoUrl = uploadData.photoUrl;
+      // Use the photo URL from Zustand (either cropped base64 or uploaded URL)
+      const finalPhotoUrl = photo.url || uploadData.photoUrl;
       console.log('Photo data:', { 
         hasFile: !!photo.file, 
         hasUrl: !!photo.url, 
-        hasCropData: !!photo.cropData,
-        hasCroppedAreaPixels: !!photo.croppedAreaPixels,
-        hasCroppedBlob: !!photo.croppedBlob,
-        cropData: photo.cropData,
-        croppedAreaPixels: photo.croppedAreaPixels
+        photoUrl: finalPhotoUrl.substring(0, 50) + '...',
+        isBase64: finalPhotoUrl.startsWith('data:')
       });
       
-      if (photo.croppedBlob) {
-        setGenerationStep('crop');
-        console.log('Uploading cropped blob...', {
-          blobSize: photo.croppedBlob.size,
-          blobType: photo.croppedBlob.type
-        });
-        
-        // Upload the cropped blob directly
-        const croppedFormData = new FormData();
-        croppedFormData.append('photo', photo.croppedBlob, `${sessionId}_cropped.jpg`);
-        croppedFormData.append('sessionId', sessionId);
-
-        const croppedUploadResponse = await fetch(`${apiUrl}/api/photo/upload`, {
-          method: 'POST',
-          body: croppedFormData,
-        });
-
-        if (!croppedUploadResponse.ok) {
-          const cropError = await croppedUploadResponse.text();
-          console.error('Cropped photo upload failed:', cropError);
-          throw new Error(`Cropped photo upload failed: ${croppedUploadResponse.status} - ${cropError}`);
-        }
-
-        const croppedUploadData = await croppedUploadResponse.json();
-        finalPhotoUrl = croppedUploadData.photoUrl;
-        console.log('Cropped photo uploaded successfully:', finalPhotoUrl);
-      }
+      // No need for separate cropping step - the PhotoCropper already created the base64 data URL
       
       // Now generate the poster with the uploaded photo URL
       setGenerationStep('generate');

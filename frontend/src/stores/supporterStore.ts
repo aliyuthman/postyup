@@ -1,24 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export interface CropData {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 export interface PhotoData {
   file?: File;
   url?: string;
-  cropData?: CropData;
-  croppedAreaPixels?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  croppedBlob?: Blob;
 }
 
 export interface SupporterState {
@@ -28,8 +13,6 @@ export interface SupporterState {
   setName: (name: string) => void;
   setTitle: (title: string) => void;
   setPhoto: (photo: PhotoData) => void;
-  setCropData: (cropData: CropData, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => void;
-  setCroppedBlob: (croppedBlob: Blob) => void;
   reset: () => void;
 }
 
@@ -46,21 +29,6 @@ export const useSupporterStore = create<SupporterState>()(
       setName: (name) => set({ name }),
       setTitle: (title) => set({ title }),
       setPhoto: (photo) => set({ photo }),
-      setCropData: (cropData, croppedAreaPixels) =>
-        set((state) => ({
-          photo: {
-            ...state.photo,
-            cropData,
-            croppedAreaPixels,
-          },
-        })),
-      setCroppedBlob: (croppedBlob) =>
-        set((state) => ({
-          photo: {
-            ...state.photo,
-            croppedBlob,
-          },
-        })),
       reset: () => set(initialState),
     }),
     {
