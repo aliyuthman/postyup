@@ -589,14 +589,9 @@ export class PosterService {
       // Force uppercase for names (same as frontend)
       const displayText = textZone.type === 'name' ? text.toUpperCase() : text;
       
-      // Calculate optimal font size for names (same as frontend)
+      // Use uniform font size for all names to prevent text cutoff
       let optimalFontSize = baseFontSize;
-      if (textZone.type === 'name') {
-        // Create a temporary canvas to measure text for font scaling
-        const tempCanvas = createCanvas(width, height);
-        const tempCtx = tempCanvas.getContext('2d');
-        optimalFontSize = this.calculateOptimalFontSize(tempCtx, displayText, baseFontSize, width);
-      }
+      // Removed smart scaling to prevent first name cutoff issues
       
       console.log(`Creating ${textZone.type} text overlay:`, {
         text: displayText,
