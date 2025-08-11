@@ -71,7 +71,7 @@ export class TemplateService {
             {
               type: 'name',
               x: 500,     // Optimized name X position
-              y: 1785,    // Optimized name Y position (bottom of text box)
+              y: 1780,    // Optimized name Y position (bottom of text box)
               width: 843,  // Optimized name text box width
               height: 160, // Optimized name text box height
               fontSize: 58.33, // Optimized name font size
@@ -84,7 +84,7 @@ export class TemplateService {
             {
               type: 'title',
               x: 500,     // Optimized title X position
-              y: 1967,    // Optimized title Y position (bottom of text box) - moved 6px up from original
+              y: 1950,    // Optimized title Y position (bottom of text box) - moved 6px up from original
               width: 660,  // Optimized title text box width
               height: 160, // Optimized title text box height
               fontSize: 50, // Optimized title font size
@@ -118,13 +118,13 @@ export class TemplateService {
           textZones: [
             {
               type: 'name',
-              x: 500, y: 1785, width: 843, height: 160,
+              x: 500, y: 1780, width: 843, height: 160,
               fontSize: 58.33, fontFamily: 'Inter', fontWeight: '700',
               color: '#1a1a1a', textAlign: 'left', letterSpacing: -0.05
             },
             {
               type: 'title',
-              x: 500, y: 1967, width: 660, height: 160,
+              x: 500, y: 1950, width: 660, height: 160,
               fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
               color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
             }
@@ -152,13 +152,13 @@ export class TemplateService {
           textZones: [
             {
               type: 'name',
-              x: 500, y: 1785, width: 843, height: 160,
+              x: 500, y: 1780, width: 843, height: 160,
               fontSize: 58.33, fontFamily: 'Inter', fontWeight: '700',
               color: '#1a1a1a', textAlign: 'left', letterSpacing: -0.05
             },
             {
               type: 'title',
-              x: 500, y: 1967, width: 660, height: 160,
+              x: 500, y: 1950, width: 660, height: 160,
               fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
               color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
             }
@@ -186,13 +186,13 @@ export class TemplateService {
           textZones: [
             {
               type: 'name',
-              x: 500, y: 1785, width: 843, height: 160,
+              x: 500, y: 1780, width: 843, height: 160,
               fontSize: 58.33, fontFamily: 'Inter', fontWeight: '700',
               color: '#1a1a1a', textAlign: 'left', letterSpacing: -0.05
             },
             {
               type: 'title',
-              x: 500, y: 1967, width: 660, height: 160,
+              x: 500, y: 1950, width: 660, height: 160,
               fontSize: 50, fontFamily: 'Inter', fontWeight: '400',
               color: '#605e5e', textAlign: 'left', letterSpacing: -0.025
             }
