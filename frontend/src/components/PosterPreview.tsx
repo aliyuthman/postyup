@@ -124,9 +124,9 @@ export default function PosterPreview({
       const nameHeight = (debugCoords.nameHeight / 2000) * canvasSize.height;
       const baseNameFontSize = (debugCoords.nameFontSize / 2000) * canvasSize.width;
       
-      // Calculate optimal font size for debug mode too
+      // Use uniform font size to prevent text cutoff issues
       const upperCaseName = content.name.toUpperCase();
-      const optimalNameFontSize = calculateOptimalFontSize(ctx, upperCaseName, baseNameFontSize, nameWidth);
+      const optimalNameFontSize = baseNameFontSize; // Disabled smart scaling
       
       ctx.font = `700 ${optimalNameFontSize}px 'Inter', Arial, sans-serif`;
       ctx.fillStyle = '#1a1a1a';
@@ -174,9 +174,9 @@ export default function PosterPreview({
           const nameHeight = (nameZone.height / 2000) * canvasSize.height;
           const baseNameFontSize = (nameZone.fontSize / 2000) * canvasSize.width;
           
-          // Calculate optimal font size based on name structure (with uppercase)
+          // Use uniform font size to prevent text cutoff issues
           const upperCaseName = content.name.toUpperCase();
-          const optimalNameFontSize = calculateOptimalFontSize(ctx, upperCaseName, baseNameFontSize, nameWidth);
+          const optimalNameFontSize = baseNameFontSize; // Disabled smart scaling
           
           // Debug logging for production coordinates
           console.log('Production text positioning:', {

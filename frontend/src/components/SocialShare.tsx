@@ -154,7 +154,7 @@ export default function SocialShare() {
       {finalPosterUrl && downloadState === 'idle' && (
         <div className="mt-3 text-center">
           <p className="text-[#A3A3A3] text-sm">
-            Your poster is ready for download in high quality
+            Your poster is ready for download
           </p>
         </div>
       )}
