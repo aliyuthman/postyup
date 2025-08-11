@@ -140,20 +140,19 @@ export class PosterService {
         });
       }
 
-      // Add text overlays using exact Photoshop specifications
-      if (supporterData.name && supporterData.title && template.layoutConfig.photoZones?.length > 0) {
-        console.log('Rendering text with exact Photoshop specifications');
+      // Add text overlays using database textZones
+      if (supporterData.name && supporterData.title && template.layoutConfig.textZones?.length >= 2) {
+        console.log('Rendering text with database textZones coordinates');
         
-        const photoZone = template.layoutConfig.photoZones[0];
-        const textOverlay = await this.createTextOverlayWithPhotoshopSpecs(
+        const textOverlay = await this.createTextOverlayFromTextZones(
           supporterData,
-          photoZone,
+          template.layoutConfig.textZones,
           size
         );
         
         if (textOverlay) {
           overlays.push(...textOverlay);
-          console.log(`Added text overlays for name and title`);
+          console.log(`Added text overlays for name and title using textZones`);
         }
       }
 
@@ -465,6 +464,117 @@ export class PosterService {
     }
     
     return pieces;
+  }
+
+  // Create text overlay using database textZones coordinates
+  private async createTextOverlayFromTextZones(
+    content: { name: string; title: string },
+    textZones: any[],
+    canvasSize: number
+  ): Promise<Array<{ input: Buffer; top: number; left: number }> | null> {
+    if (!content.name || !content.title || textZones.length < 2) return null;
+    
+    try {
+      const nameZone = textZones.find(zone => zone.type === 'name');
+      const titleZone = textZones.find(zone => zone.type === 'title');
+      
+      if (!nameZone || !titleZone) return null;
+      
+      console.log('Creating text overlays with textZones:', { nameZone, titleZone, canvasSize });
+      
+      const overlays = [];
+      
+      // Create name text overlay
+      const nameOverlay = await this.createSingleTextOverlay(
+        content.name,
+        nameZone,
+        canvasSize
+      );
+      if (nameOverlay) overlays.push(nameOverlay);
+      
+      // Create title text overlay
+      const titleOverlay = await this.createSingleTextOverlay(
+        content.title,
+        titleZone,
+        canvasSize
+      );
+      if (titleOverlay) overlays.push(titleOverlay);
+      
+      return overlays;
+    } catch (error) {
+      console.error('Error creating text overlays from textZones:', error);
+      return null;
+    }
+  }
+
+  // Create single text overlay from textZone
+  private async createSingleTextOverlay(
+    text: string,
+    textZone: any,
+    canvasSize: number
+  ): Promise<{ input: Buffer; top: number; left: number } | null> {
+    try {
+      // Calculate scaled dimensions
+      const x = Math.round((textZone.x / 2000) * canvasSize);
+      const y = Math.round((textZone.y / 2000) * canvasSize);
+      const width = Math.round((textZone.width / 2000) * canvasSize);
+      const height = Math.round((textZone.height / 2000) * canvasSize);
+      const fontSize = Math.round((textZone.fontSize / 2000) * canvasSize);
+      
+      console.log(`Creating ${textZone.type} text overlay:`, {
+        text,
+        coordinates: { x, y, width, height },
+        fontSize,
+        original: textZone
+      });
+      
+      // Create canvas for text
+      const canvas = createCanvas(width, height);
+      const ctx = canvas.getContext('2d');
+      
+      // Set text properties
+      ctx.font = `${textZone.fontWeight || '400'} ${fontSize}px ${textZone.fontFamily || 'Arial'}`;
+      ctx.fillStyle = textZone.color || '#000000';
+      ctx.textAlign = textZone.textAlign || 'left';
+      
+      // Simple text wrapping
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = '';
+      
+      for (const word of words) {
+        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const testWidth = ctx.measureText(testLine).width;
+        
+        if (testWidth > width && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+      
+      // Render text lines
+      const lineHeight = fontSize * 1.2;
+      lines.forEach((line, index) => {
+        const lineY = fontSize + (index * lineHeight);
+        if (lineY <= height) {
+          ctx.fillText(line, 0, lineY);
+        }
+      });
+      
+      const buffer = canvas.toBuffer('image/png');
+      
+      return {
+        input: buffer,
+        top: y - height, // Y coordinate is bottom of text box, so subtract height
+        left: x,
+      };
+    } catch (error) {
+      console.error(`Error creating ${textZone.type} text overlay:`, error);
+      return null;
+    }
   }
 
 }
