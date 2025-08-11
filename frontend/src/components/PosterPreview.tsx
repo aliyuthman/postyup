@@ -125,14 +125,15 @@ export default function PosterPreview({
       const baseNameFontSize = (debugCoords.nameFontSize / 2000) * canvasSize.width;
       
       // Calculate optimal font size for debug mode too
-      const optimalNameFontSize = calculateOptimalFontSize(ctx, content.name, baseNameFontSize, nameWidth);
+      const upperCaseName = content.name.toUpperCase();
+      const optimalNameFontSize = calculateOptimalFontSize(ctx, upperCaseName, baseNameFontSize, nameWidth);
       
       ctx.font = `700 ${optimalNameFontSize}px 'Inter', Arial, sans-serif`;
       ctx.fillStyle = '#1a1a1a';
       ctx.textAlign = 'left';
       ctx.letterSpacing = `${-0.05 * optimalNameFontSize}px`;
       
-      const nameLines = intelligentWrapText(ctx, content.name, nameWidth);
+      const nameLines = intelligentWrapText(ctx, upperCaseName, nameWidth);
       nameLines.forEach((line, index) => {
         const lineY = nameY - nameHeight + (index * optimalNameFontSize * 1.2) + optimalNameFontSize;
         if (lineY <= nameY) { // Only render if within the text box
@@ -173,8 +174,9 @@ export default function PosterPreview({
           const nameHeight = (nameZone.height / 2000) * canvasSize.height;
           const baseNameFontSize = (nameZone.fontSize / 2000) * canvasSize.width;
           
-          // Calculate optimal font size based on name structure
-          const optimalNameFontSize = calculateOptimalFontSize(ctx, content.name, baseNameFontSize, nameWidth);
+          // Calculate optimal font size based on name structure (with uppercase)
+          const upperCaseName = content.name.toUpperCase();
+          const optimalNameFontSize = calculateOptimalFontSize(ctx, upperCaseName, baseNameFontSize, nameWidth);
           
           // Debug logging for production coordinates
           console.log('Production text positioning:', {
@@ -189,7 +191,7 @@ export default function PosterPreview({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ctx.letterSpacing = `${((nameZone as any).letterSpacing || 0) * optimalNameFontSize}px`;
           
-          const nameLines = intelligentWrapText(ctx, content.name, nameWidth);
+          const nameLines = intelligentWrapText(ctx, upperCaseName, nameWidth);
           nameLines.forEach((line, index) => {
             const lineY = nameY - nameHeight + (index * optimalNameFontSize * 1.2) + optimalNameFontSize;
             if (lineY <= nameY) {
@@ -372,7 +374,7 @@ export default function PosterPreview({
     const spaceCount = words.length - 1;
     
     let optimalSize = baseFontSize;
-    const maxIncrease = baseFontSize * 0.5; // Max 50% size increase
+    const maxIncrease = baseFontSize * 1.0; // Max 100% size increase (doubled scaling)
     
     if (spaceCount === 0) {
       // Single name: increase until it fits width nicely
