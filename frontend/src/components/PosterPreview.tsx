@@ -180,7 +180,7 @@ export default function PosterPreview({
           console.log('Production text positioning:', {
             canvasSize,
             nameZone: { x: nameZone.x, y: nameZone.y, width: nameZone.width, height: nameZone.height, fontSize: nameZone.fontSize },
-            calculated: { nameX, nameY, nameWidth, nameHeight, nameFontSize }
+            calculated: { nameX, nameY, nameWidth, nameHeight, optimalNameFontSize }
           });
           
           ctx.font = `${nameZone.fontWeight} ${optimalNameFontSize}px '${nameZone.fontFamily}', Arial, sans-serif`;
@@ -386,7 +386,7 @@ export default function PosterPreview({
       }
     } else if (spaceCount === 1) {
       // First Last: increase until Last breaks to second line
-      const [first, last] = words;
+      const [first] = words;
       for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
         ctx.font = `700 ${size}px 'Inter', Arial, sans-serif`;
         const fullWidth = ctx.measureText(name).width;
@@ -404,7 +404,6 @@ export default function PosterPreview({
       }
     } else if (spaceCount >= 2) {
       // First Middle+ Last: increase until only Last breaks
-      const lastWord = words[words.length - 1];
       const beforeLast = words.slice(0, -1).join(' ');
       
       for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
