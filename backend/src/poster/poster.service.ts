@@ -507,6 +507,71 @@ export class PosterService {
     }
   }
 
+  // Smart font sizing based on name structure (same logic as frontend)
+  private calculateOptimalFontSize(
+    ctx: CanvasRenderingContext2D,
+    name: string,
+    baseFontSize: number,
+    maxWidth: number
+  ): number {
+    const words = name.trim().split(' ');
+    const spaceCount = words.length - 1;
+    
+    let optimalSize = baseFontSize;
+    const maxIncrease = baseFontSize * 1.0; // Max 100% size increase (doubled scaling)
+    
+    if (spaceCount === 0) {
+      // Single name: increase until it fits width nicely
+      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
+        ctx.font = `700 ${size}px Inter`;
+        if (ctx.measureText(name).width <= maxWidth * 0.9) { // Leave 10% margin
+          optimalSize = size;
+        } else {
+          break;
+        }
+      }
+    } else if (spaceCount === 1) {
+      // First Last: increase until Last breaks to second line
+      const [first] = words;
+      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
+        ctx.font = `700 ${size}px Inter`;
+        const fullWidth = ctx.measureText(name).width;
+        const firstWidth = ctx.measureText(first).width;
+        
+        if (fullWidth > maxWidth && firstWidth <= maxWidth * 0.8) {
+          // Perfect: first name fits, full name doesn't
+          optimalSize = size;
+          break;
+        } else if (fullWidth <= maxWidth) {
+          optimalSize = size;
+        } else {
+          break;
+        }
+      }
+    } else if (spaceCount >= 2) {
+      // First Middle+ Last: increase until only Last breaks
+      const beforeLast = words.slice(0, -1).join(' ');
+      
+      for (let size = baseFontSize; size <= baseFontSize + maxIncrease; size += 2) {
+        ctx.font = `700 ${size}px Inter`;
+        const beforeLastWidth = ctx.measureText(beforeLast).width;
+        const fullWidth = ctx.measureText(name).width;
+        
+        if (fullWidth > maxWidth && beforeLastWidth <= maxWidth * 0.8) {
+          // Perfect: "First Middle" fits, full name doesn't
+          optimalSize = size;
+          break;
+        } else if (fullWidth <= maxWidth) {
+          optimalSize = size;
+        } else {
+          break;
+        }
+      }
+    }
+    
+    return optimalSize;
+  }
+
   // Create single text overlay from textZone
   private async createSingleTextOverlay(
     text: string,
@@ -519,12 +584,25 @@ export class PosterService {
       const y = Math.round((textZone.y / 2000) * canvasSize);
       const width = Math.round((textZone.width / 2000) * canvasSize);
       const height = Math.round((textZone.height / 2000) * canvasSize);
-      const fontSize = Math.round((textZone.fontSize / 2000) * canvasSize);
+      const baseFontSize = Math.round((textZone.fontSize / 2000) * canvasSize);
+      
+      // Force uppercase for names (same as frontend)
+      const displayText = textZone.type === 'name' ? text.toUpperCase() : text;
+      
+      // Calculate optimal font size for names (same as frontend)
+      let optimalFontSize = baseFontSize;
+      if (textZone.type === 'name') {
+        // Create a temporary canvas to measure text for font scaling
+        const tempCanvas = createCanvas(width, height);
+        const tempCtx = tempCanvas.getContext('2d');
+        optimalFontSize = this.calculateOptimalFontSize(tempCtx, displayText, baseFontSize, width);
+      }
       
       console.log(`Creating ${textZone.type} text overlay:`, {
-        text,
+        text: displayText,
         coordinates: { x, y, width, height },
-        fontSize,
+        baseFontSize,
+        optimalFontSize,
         original: textZone
       });
       
@@ -532,13 +610,13 @@ export class PosterService {
       const canvas = createCanvas(width, height);
       const ctx = canvas.getContext('2d');
       
-      // Set text properties
-      ctx.font = `${textZone.fontWeight || '400'} ${fontSize}px ${textZone.fontFamily || 'Arial'}`;
+      // Set text properties with optimal font size
+      ctx.font = `${textZone.fontWeight || '400'} ${optimalFontSize}px ${textZone.fontFamily || 'Arial'}`;
       ctx.fillStyle = textZone.color || '#000000';
       ctx.textAlign = textZone.textAlign || 'left';
       
-      // Simple text wrapping
-      const words = text.split(' ');
+      // Simple text wrapping using display text
+      const words = displayText.split(' ');
       const lines = [];
       let currentLine = '';
       
@@ -555,10 +633,10 @@ export class PosterService {
       }
       if (currentLine) lines.push(currentLine);
       
-      // Render text lines
-      const lineHeight = fontSize * 1.2;
+      // Render text lines with optimal font size
+      const lineHeight = optimalFontSize * 1.2;
       lines.forEach((line, index) => {
-        const lineY = fontSize + (index * lineHeight);
+        const lineY = optimalFontSize + (index * lineHeight);
         if (lineY <= height) {
           ctx.fillText(line, 0, lineY);
         }
