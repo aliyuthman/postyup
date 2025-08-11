@@ -18,6 +18,7 @@ export default function Home() {
   const { setFinalPosterUrl, setGenerationStatus, generationStatus, finalPosterUrl } = usePosterStore();
 
   const [showCropper, setShowCropper] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
@@ -379,10 +380,25 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto space-y-4">
+              {/* Debug Toggle */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setDebugMode(!debugMode)}
+                  className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                    debugMode 
+                      ? 'bg-red-600 text-white' 
+                      : 'bg-[#404040] text-[#A3A3A3] hover:bg-[#505050]'
+                  }`}
+                >
+                  {debugMode ? '🐛 Debug ON' : 'Debug Mode'}
+                </button>
+              </div>
+              
               <PosterPreview 
                 showControls={!finalPosterUrl}
                 onGenerate={handleGeneratePoster}
+                debugMode={debugMode}
               />
               {finalPosterUrl && <SocialShare />}
             </div>

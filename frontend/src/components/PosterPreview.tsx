@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { useSupporterStore } from '@/stores/supporterStore';
 import { useTemplateStore } from '@/stores/templateStore';
 
@@ -9,95 +9,73 @@ interface PosterPreviewProps {
   height?: number;
   showControls?: boolean;
   onGenerate?: () => void;
+  debugMode?: boolean;
 }
 
 export default function PosterPreview({ 
   width = 400, 
   height = 400, 
   showControls = true,
-  onGenerate 
+  onGenerate,
+  debugMode = false 
 }: PosterPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { name, title, photo } = useSupporterStore();
   const { selectedTemplate } = useTemplateStore();
+  
+  // Debug state for positioning
+  const [debugCoords, setDebugCoords] = useState({
+    photoX: 88,
+    photoY: 1607,
+    photoWidth: 305,
+    photoHeight: 305,
+    textAreaLeft: 100,
+    textAreaBottom: 1567, // 40px above photo
+    nameFontSize: 58.33,
+    titleFontSize: 50,
+    textSpacing: 20
+  });
 
-  useEffect(() => {
-    if (selectedTemplate && canvasRef.current) {
-      renderPreview();
-    }
-  }, [selectedTemplate, name, title, photo, width, height]);
-
-  const renderPreview = useCallback(async () => {
-    if (!selectedTemplate || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size
-    canvas.width = width;
-    canvas.height = height;
-
-    try {
-      // Load template image
-      const templateImg = new Image();
-      templateImg.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        templateImg.onload = resolve;
-        templateImg.onerror = reject;
-        templateImg.src = selectedTemplate.imageUrls.preview;
-      });
-
-      // Draw template background
-      ctx.drawImage(templateImg, 0, 0, width, height);
-
-      // Draw user photo if available
-      if (photo.url && selectedTemplate.layoutConfig.photoZones.length > 0) {
-        const photoZone = selectedTemplate.layoutConfig.photoZones[0];
-        const userImg = new Image();
-        userImg.crossOrigin = 'anonymous';
-        
-        await new Promise((resolve, reject) => {
-          userImg.onload = resolve;
-          userImg.onerror = reject;
-          userImg.src = photo.url!;
-        });
-
-        // Calculate photo position and size (based on 2000x2000 final size)
-        const photoX = (photoZone.x / 2000) * width;
-        const photoY = (photoZone.y / 2000) * height;
-        const photoWidth = (photoZone.width / 2000) * width;
-        const photoHeight = (photoZone.height / 2000) * height;
-
-        // Save context for clipping
-        ctx.save();
-        
-        // Create circular clip if borderRadius is specified
-        if (photoZone.borderRadius) {
-          ctx.beginPath();
-          ctx.arc(
-            photoX + photoWidth / 2,
-            photoY + photoHeight / 2,
-            Math.min(photoWidth, photoHeight) / 2,
-            0,
-            2 * Math.PI
-          );
-          ctx.clip();
-        }
-
-        // Draw photo
-        ctx.drawImage(userImg, photoX, photoY, photoWidth, photoHeight);
-        ctx.restore();
-      }
-
-          // Render text using new adaptive system
-      renderAdaptiveText(ctx, { name, title }, { width, height });
-
-    } catch (error) {
-      console.error('Error rendering preview:', error);
-    }
-  }, [selectedTemplate, name, title, photo, width, height]);
+  // Debug overlay drawing function
+  const drawDebugOverlays = useCallback((
+    ctx: CanvasRenderingContext2D,
+    canvasSize: { width: number; height: number }
+  ) => {
+    ctx.save();
+    
+    // Draw photo zone outline
+    const photoX = (debugCoords.photoX / 2000) * canvasSize.width;
+    const photoY = (debugCoords.photoY / 2000) * canvasSize.height;
+    const photoWidth = (debugCoords.photoWidth / 2000) * canvasSize.width;
+    const photoHeight = (debugCoords.photoHeight / 2000) * canvasSize.height;
+    
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(photoX, photoY, photoWidth, photoHeight);
+    
+    // Draw text area outline
+    const textAreaLeft = (debugCoords.textAreaLeft / 2000) * canvasSize.width;
+    const textAreaBottom = (debugCoords.textAreaBottom / 2000) * canvasSize.height;
+    const textAreaWidth = canvasSize.width - (textAreaLeft * 2);
+    
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(textAreaLeft, textAreaBottom - 200, textAreaWidth, 200);
+    
+    // Draw coordinate labels
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px Arial';
+    ctx.fillRect(photoX, photoY - 20, 120, 18);
+    ctx.fillStyle = '#000000';
+    ctx.fillText(`Photo: ${debugCoords.photoX}, ${debugCoords.photoY}`, photoX + 2, photoY - 5);
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(textAreaLeft, textAreaBottom - 220, 100, 18);
+    ctx.fillStyle = '#000000';
+    ctx.fillText(`Text: ${debugCoords.textAreaLeft}`, textAreaLeft + 2, textAreaBottom - 205);
+    
+    ctx.restore();
+  }, [debugCoords]);
 
   // Adaptive text rendering system
   const renderAdaptiveText = useCallback((
@@ -108,21 +86,21 @@ export default function PosterPreview({
     if (!content.name || !content.title) return;
     
     // Define text area above the photo (positioned at bottom left)
-    const textAreaMargin = (100 / 2000) * canvasSize.width; // Left margin matching backend
+    const textAreaMargin = debugMode ? (debugCoords.textAreaLeft / 2000) * canvasSize.width : (100 / 2000) * canvasSize.width; // Left margin matching backend
     const textAreaWidth = canvasSize.width - (textAreaMargin * 2);
     // Photo is at Y: 1607, so position text above it
-    const photoY = (1607 / 2000) * canvasSize.height;
-    const textAreaBottom = photoY - (40 / 2000) * canvasSize.height; // 40px gap above photo
+    const photoY = debugMode ? (debugCoords.photoY / 2000) * canvasSize.height : (1607 / 2000) * canvasSize.height;
+    const textAreaBottom = debugMode ? (debugCoords.textAreaBottom / 2000) * canvasSize.height : photoY - (40 / 2000) * canvasSize.height; // 40px gap above photo
     
     // Use exact Photoshop specifications for name text
     // 14pt at 300 DPI = 58.33px, scaled for canvas size
-    const nameFontSize = (58.33 / 2000) * canvasSize.width;
+    const nameFontSize = debugMode ? (debugCoords.nameFontSize / 2000) * canvasSize.width : (58.33 / 2000) * canvasSize.width;
     // 16pt line height at 300 DPI = 66.67px, scaled for canvas size  
     const nameLineHeight = (66.67 / 2000) * canvasSize.width;
     
     // Use exact Photoshop specifications for role text
     // 12pt at 300 DPI = 50px, scaled for canvas size
-    const roleFontSize = (50 / 2000) * canvasSize.width;
+    const roleFontSize = debugMode ? (debugCoords.titleFontSize / 2000) * canvasSize.width : (50 / 2000) * canvasSize.width;
     // 14pt line height at 300 DPI = 58.33px, scaled for canvas size
     const roleLineHeight = (58.33 / 2000) * canvasSize.width;
     
@@ -177,45 +155,91 @@ export default function PosterPreview({
       ctx.fillText(line, textAreaMargin, currentY);
       currentY += roleLineHeight;
     });
-  }, []);
-  // Smart font size calculation
-  const calculateSmartFontSize = (
-    text: string,
-    maxWidth: number,
-    canvasWidth: number,
-    type: 'name' | 'role',
-    ctx: CanvasRenderingContext2D
-  ): number => {
-    const baseSizes = {
-      name: Math.max(canvasWidth * 0.04, 24), // 4% of canvas width, min 24px
-      role: Math.max(canvasWidth * 0.025, 16)  // 2.5% of canvas width, min 16px
-    };
-    
-    let fontSize = baseSizes[type];
-    const maxSize = baseSizes[type] * 1.5;
-    const minSize = baseSizes[type] * 0.7;
-    
-    // Test if text fits at base size
-    ctx.save();
-    ctx.font = `${type === 'name' ? 'bold' : '400'} ${fontSize}px 'Inter', Arial, sans-serif`;
-    
-    const words = text.split(' ');
-    const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, '');
-    
-    // If longest word doesn't fit, reduce font size
-    while (fontSize > minSize && ctx.measureText(longestWord).width > maxWidth) {
-      fontSize *= 0.9;
-      ctx.font = `${type === 'name' ? 'bold' : '400'} ${fontSize}px 'Inter', Arial, sans-serif`;
+  }, [debugMode, debugCoords]);
+
+  const renderPreview = useCallback(async () => {
+    if (!selectedTemplate || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size
+    canvas.width = width;
+    canvas.height = height;
+
+    try {
+      // Load template image
+      const templateImg = new Image();
+      templateImg.crossOrigin = 'anonymous';
+      
+      await new Promise((resolve, reject) => {
+        templateImg.onload = resolve;
+        templateImg.onerror = reject;
+        templateImg.src = selectedTemplate.imageUrls.preview;
+      });
+
+      // Draw template background
+      ctx.drawImage(templateImg, 0, 0, width, height);
+
+      // Draw user photo if available
+      if (photo.url && selectedTemplate.layoutConfig.photoZones.length > 0) {
+        const photoZone = selectedTemplate.layoutConfig.photoZones[0];
+        const userImg = new Image();
+        userImg.crossOrigin = 'anonymous';
+        
+        await new Promise((resolve, reject) => {
+          userImg.onload = resolve;
+          userImg.onerror = reject;
+          userImg.src = photo.url!;
+        });
+
+        // Calculate photo position and size (based on 2000x2000 final size)
+        const photoX = debugMode ? (debugCoords.photoX / 2000) * width : (photoZone.x / 2000) * width;
+        const photoY = debugMode ? (debugCoords.photoY / 2000) * height : (photoZone.y / 2000) * height;
+        const photoWidth = debugMode ? (debugCoords.photoWidth / 2000) * width : (photoZone.width / 2000) * width;
+        const photoHeight = debugMode ? (debugCoords.photoHeight / 2000) * height : (photoZone.height / 2000) * height;
+
+        // Save context for clipping
+        ctx.save();
+        
+        // Create circular clip if borderRadius is specified
+        if (photoZone.borderRadius) {
+          ctx.beginPath();
+          ctx.arc(
+            photoX + photoWidth / 2,
+            photoY + photoHeight / 2,
+            Math.min(photoWidth, photoHeight) / 2,
+            0,
+            2 * Math.PI
+          );
+          ctx.clip();
+        }
+
+        // Draw photo
+        ctx.drawImage(userImg, photoX, photoY, photoWidth, photoHeight);
+        ctx.restore();
+      }
+
+      // Render text using new adaptive system
+      renderAdaptiveText(ctx, { name, title }, { width, height });
+      
+      // Draw debug overlays if in debug mode
+      if (debugMode) {
+        drawDebugOverlays(ctx, { width, height });
+      }
+
+    } catch (error) {
+      console.error('Error rendering preview:', error);
     }
-    
-    // If text is short, allow larger font up to max
-    if (text.length < 20 && fontSize < maxSize) {
-      fontSize = Math.min(maxSize, fontSize * 1.2);
+  }, [selectedTemplate, name, title, photo, width, height, debugMode, debugCoords, drawDebugOverlays, renderAdaptiveText]);
+
+  useEffect(() => {
+    if (selectedTemplate && canvasRef.current) {
+      renderPreview();
     }
-    
-    ctx.restore();
-    return Math.round(fontSize);
-  };
+  }, [renderPreview, debugCoords, debugMode, selectedTemplate]);
+
 
   // Intelligent text wrapping with visual balance
   const intelligentWrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
@@ -345,6 +369,111 @@ export default function PosterPreview({
           >
             Generate Final Poster
           </button>
+        </div>
+      )}
+      
+      {debugMode && (
+        <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl space-y-4">
+          <h3 className="text-sm font-medium text-[#FAFAFA]">Debug Controls</h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {/* Photo Position Controls */}
+            <div className="space-y-2">
+              <label className="text-xs text-[#A3A3A3]">Photo X</label>
+              <input
+                type="number"
+                value={debugCoords.photoX}
+                onChange={(e) => setDebugCoords(prev => ({ ...prev, photoX: parseInt(e.target.value) || 0 }))}
+                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-[#A3A3A3]">Photo Y</label>
+              <input
+                type="number"
+                value={debugCoords.photoY}
+                onChange={(e) => setDebugCoords(prev => ({ ...prev, photoY: parseInt(e.target.value) || 0 }))}
+                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-[#A3A3A3]">Photo Width</label>
+              <input
+                type="number"
+                value={debugCoords.photoWidth}
+                onChange={(e) => setDebugCoords(prev => ({ ...prev, photoWidth: parseInt(e.target.value) || 0 }))}
+                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-[#A3A3A3]">Photo Height</label>
+              <input
+                type="number"
+                value={debugCoords.photoHeight}
+                onChange={(e) => setDebugCoords(prev => ({ ...prev, photoHeight: parseInt(e.target.value) || 0 }))}
+                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+              />
+            </div>
+            
+            {/* Text Position Controls */}
+            <div className="space-y-2">
+              <label className="text-xs text-[#A3A3A3]">Text Left</label>
+              <input
+                type="number"
+                value={debugCoords.textAreaLeft}
+                onChange={(e) => setDebugCoords(prev => ({ ...prev, textAreaLeft: parseInt(e.target.value) || 0 }))}
+                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-[#A3A3A3]">Text Bottom</label>
+              <input
+                type="number"
+                value={debugCoords.textAreaBottom}
+                onChange={(e) => setDebugCoords(prev => ({ ...prev, textAreaBottom: parseInt(e.target.value) || 0 }))}
+                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-[#A3A3A3]">Name Font Size</label>
+              <input
+                type="number"
+                step="0.1"
+                value={debugCoords.nameFontSize}
+                onChange={(e) => setDebugCoords(prev => ({ ...prev, nameFontSize: parseFloat(e.target.value) || 0 }))}
+                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-[#A3A3A3]">Title Font Size</label>
+              <input
+                type="number"
+                step="0.1"
+                value={debugCoords.titleFontSize}
+                onChange={(e) => setDebugCoords(prev => ({ ...prev, titleFontSize: parseFloat(e.target.value) || 0 }))}
+                className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={() => console.log('Current coordinates:', debugCoords)}
+              className="px-3 py-1 text-xs bg-[#404040] text-[#FAFAFA] rounded hover:bg-[#505050]"
+            >
+              Log Coordinates
+            </button>
+            <button
+              onClick={() => setDebugCoords({
+                photoX: 88, photoY: 1607, photoWidth: 305, photoHeight: 305,
+                textAreaLeft: 100, textAreaBottom: 1567,
+                nameFontSize: 58.33, titleFontSize: 50, textSpacing: 20
+              })}
+              className="px-3 py-1 text-xs bg-[#404040] text-[#FAFAFA] rounded hover:bg-[#505050]"
+            >
+              Reset
+            </button>
+          </div>
         </div>
       )}
     </div>
