@@ -107,10 +107,6 @@ export class PosterService {
       // Add photo overlay if photo zones exist
       if (template.layoutConfig.photoZones?.length > 0 && photoUrl) {
         const photoZone = template.layoutConfig.photoZones[0];
-        
-        // Download user photo
-        const photoResponse = await fetch(photoUrl);
-        const photoBuffer = await photoResponse.arrayBuffer();
 
         // Calculate scaled dimensions
         const photoX = Math.round((photoZone.x / 2000) * size);
@@ -118,14 +114,26 @@ export class PosterService {
         const photoWidth = Math.round((photoZone.width / 2000) * size);
         const photoHeight = Math.round((photoZone.height / 2000) * size);
 
-        // Process photo - resize to fit the photo zone exactly (like text positioning)
         console.log('Processing photo for poster:', {
-          photoUrl,
+          photoUrl: photoUrl.substring(0, 50) + '...',
+          isBase64: photoUrl.startsWith('data:'),
           photoZone: { x: photoZone.x, y: photoZone.y, width: photoZone.width, height: photoZone.height },
           scaledDimensions: { photoX, photoY, photoWidth, photoHeight }
         });
+
+        let photoBuffer: ArrayBuffer;
         
-        // Resize photo to fit exactly in the photo zone (cropping should be done client-side)
+        if (photoUrl.startsWith('data:')) {
+          // Handle base64 data URL (from react-avatar-editor)
+          const base64Data = photoUrl.split(',')[1];
+          photoBuffer = Buffer.from(base64Data, 'base64').buffer;
+        } else {
+          // Handle regular URL
+          const photoResponse = await fetch(photoUrl);
+          photoBuffer = await photoResponse.arrayBuffer();
+        }
+        
+        // Simply resize the photo to fit the photo zone (cropping already done client-side)
         let processedPhoto = sharp(Buffer.from(photoBuffer))
           .resize(photoWidth, photoHeight, { fit: 'fill' });
 
