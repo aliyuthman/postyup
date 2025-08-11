@@ -29,13 +29,17 @@ export default function PosterPreview({
     photoY: 1607,
     photoWidth: 305,
     photoHeight: 305,
-    // Name text positioning
+    // Name text positioning and dimensions
     nameX: 100,
     nameY: 1400,
+    nameWidth: 1800, // Text box width
+    nameHeight: 100, // Text box height
     nameFontSize: 58.33,
-    // Title text positioning  
+    // Title text positioning and dimensions
     titleX: 100,
     titleY: 1500,
+    titleWidth: 1800, // Text box width
+    titleHeight: 80, // Text box height
     titleFontSize: 50,
     // General spacing
     textSpacing: 20
@@ -61,22 +65,22 @@ export default function PosterPreview({
     // Draw name text area outline
     const nameX = (debugCoords.nameX / 2000) * canvasSize.width;
     const nameY = (debugCoords.nameY / 2000) * canvasSize.height;
-    const nameWidth = canvasSize.width - (nameX * 2);
-    const nameFontSize = (debugCoords.nameFontSize / 2000) * canvasSize.width;
+    const nameWidth = (debugCoords.nameWidth / 2000) * canvasSize.width;
+    const nameHeight = (debugCoords.nameHeight / 2000) * canvasSize.height;
     
     ctx.strokeStyle = '#00ff00';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(nameX, nameY - nameFontSize, nameWidth, nameFontSize + 10);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(nameX, nameY - nameHeight, nameWidth, nameHeight);
     
     // Draw title text area outline
     const titleX = (debugCoords.titleX / 2000) * canvasSize.width;
     const titleY = (debugCoords.titleY / 2000) * canvasSize.height;
-    const titleWidth = canvasSize.width - (titleX * 2);
-    const titleFontSize = (debugCoords.titleFontSize / 2000) * canvasSize.width;
+    const titleWidth = (debugCoords.titleWidth / 2000) * canvasSize.width;
+    const titleHeight = (debugCoords.titleHeight / 2000) * canvasSize.height;
     
     ctx.strokeStyle = '#0080ff';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(titleX, titleY - titleFontSize, titleWidth, titleFontSize + 10);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(titleX, titleY - titleHeight, titleWidth, titleHeight);
     
     // Draw coordinate labels
     ctx.fillStyle = '#ffffff';
@@ -89,15 +93,15 @@ export default function PosterPreview({
     
     // Name label
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(nameX, nameY - nameFontSize - 35, 100, 16);
+    ctx.fillRect(nameX, nameY - nameHeight - 35, 150, 16);
     ctx.fillStyle = '#000000';
-    ctx.fillText(`Name: ${debugCoords.nameX}, ${debugCoords.nameY}`, nameX + 2, nameY - nameFontSize - 22);
+    ctx.fillText(`Name: ${debugCoords.nameX},${debugCoords.nameY} ${debugCoords.nameWidth}x${debugCoords.nameHeight}`, nameX + 2, nameY - nameHeight - 22);
     
     // Title label
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(titleX, titleY - titleFontSize - 35, 100, 16);
+    ctx.fillRect(titleX, titleY - titleHeight - 35, 150, 16);
     ctx.fillStyle = '#000000';
-    ctx.fillText(`Title: ${debugCoords.titleX}, ${debugCoords.titleY}`, titleX + 2, titleY - titleFontSize - 22);
+    ctx.fillText(`Title: ${debugCoords.titleX},${debugCoords.titleY} ${debugCoords.titleWidth}x${debugCoords.titleHeight}`, titleX + 2, titleY - titleHeight - 22);
     
     ctx.restore();
   }, [debugCoords]);
@@ -116,8 +120,9 @@ export default function PosterPreview({
       // RENDER NAME
       const nameX = (debugCoords.nameX / 2000) * canvasSize.width;
       const nameY = (debugCoords.nameY / 2000) * canvasSize.height;
+      const nameWidth = (debugCoords.nameWidth / 2000) * canvasSize.width;
+      const nameHeight = (debugCoords.nameHeight / 2000) * canvasSize.height;
       const nameFontSize = (debugCoords.nameFontSize / 2000) * canvasSize.width;
-      const nameWidth = canvasSize.width - (nameX * 2);
       
       ctx.font = `700 ${nameFontSize}px 'Inter', Arial, sans-serif`;
       ctx.fillStyle = '#1a1a1a';
@@ -126,14 +131,18 @@ export default function PosterPreview({
       
       const nameLines = intelligentWrapText(ctx, content.name, nameWidth);
       nameLines.forEach((line, index) => {
-        ctx.fillText(line, nameX, nameY + (index * nameFontSize * 1.2));
+        const lineY = nameY - nameHeight + (index * nameFontSize * 1.2) + nameFontSize;
+        if (lineY <= nameY) { // Only render if within the text box
+          ctx.fillText(line, nameX, lineY);
+        }
       });
       
       // RENDER TITLE
       const titleX = (debugCoords.titleX / 2000) * canvasSize.width;
       const titleY = (debugCoords.titleY / 2000) * canvasSize.height;
+      const titleWidth = (debugCoords.titleWidth / 2000) * canvasSize.width;
+      const titleHeight = (debugCoords.titleHeight / 2000) * canvasSize.height;
       const titleFontSize = (debugCoords.titleFontSize / 2000) * canvasSize.width;
-      const titleWidth = canvasSize.width - (titleX * 2);
       
       ctx.font = `400 ${titleFontSize}px 'Inter', Arial, sans-serif`;
       ctx.fillStyle = '#605e5e';
@@ -141,7 +150,10 @@ export default function PosterPreview({
       
       const titleLines = intelligentWrapText(ctx, content.title, titleWidth);
       titleLines.forEach((line, index) => {
-        ctx.fillText(line, titleX, titleY + (index * titleFontSize * 1.2));
+        const lineY = titleY - titleHeight + (index * titleFontSize * 1.2) + titleFontSize;
+        if (lineY <= titleY) { // Only render if within the text box
+          ctx.fillText(line, titleX, lineY);
+        }
       });
       
     } else {
@@ -466,7 +478,7 @@ export default function PosterPreview({
           
           {/* Name Text Controls */}
           <div className="space-y-3">
-            <h4 className="text-xs font-medium text-[#51cf66]">👤 Name Text Position (Green Box)</h4>
+            <h4 className="text-xs font-medium text-[#51cf66]">👤 Name Text Frame (Green Box)</h4>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-xs text-[#A3A3A3]">Name X</label>
@@ -496,12 +508,30 @@ export default function PosterPreview({
                   className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Name Width</label>
+                <input
+                  type="number"
+                  value={debugCoords.nameWidth}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, nameWidth: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Name Height</label>
+                <input
+                  type="number"
+                  value={debugCoords.nameHeight}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, nameHeight: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
             </div>
           </div>
           
           {/* Title Text Controls */}
           <div className="space-y-3">
-            <h4 className="text-xs font-medium text-[#4dabf7]">💼 Title Text Position (Blue Box)</h4>
+            <h4 className="text-xs font-medium text-[#4dabf7]">💼 Title Text Frame (Blue Box)</h4>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-xs text-[#A3A3A3]">Title X</label>
@@ -531,6 +561,24 @@ export default function PosterPreview({
                   className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Title Width</label>
+                <input
+                  type="number"
+                  value={debugCoords.titleWidth}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, titleWidth: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#A3A3A3]">Title Height</label>
+                <input
+                  type="number"
+                  value={debugCoords.titleHeight}
+                  onChange={(e) => setDebugCoords(prev => ({ ...prev, titleHeight: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-2 py-1 text-xs bg-[#262626] text-[#FAFAFA] rounded border border-[#404040]"
+                />
+              </div>
             </div>
           </div>
           
@@ -544,8 +592,9 @@ export default function PosterPreview({
             <button
               onClick={() => setDebugCoords({
                 photoX: 88, photoY: 1607, photoWidth: 305, photoHeight: 305,
-                nameX: 100, nameY: 1400, nameFontSize: 58.33,
-                titleX: 100, titleY: 1500, titleFontSize: 50, textSpacing: 20
+                nameX: 100, nameY: 1400, nameWidth: 1800, nameHeight: 100, nameFontSize: 58.33,
+                titleX: 100, titleY: 1500, titleWidth: 1800, titleHeight: 80, titleFontSize: 50, 
+                textSpacing: 20
               })}
               className="px-3 py-1 text-xs bg-[#404040] text-[#FAFAFA] rounded hover:bg-[#505050]"
             >
