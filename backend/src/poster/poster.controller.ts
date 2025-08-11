@@ -13,7 +13,7 @@ export class PosterController {
   @ApiOperation({ summary: 'Generate poster with supporter data' })
   @ApiResponse({ status: 200, description: 'Poster generated successfully' })
   async generatePoster(@Body() generateData: GeneratePosterDto) {
-    const { templateId, supporterData, photoUrl, sessionId, isPhotoPreCropped } = generateData;
+    const { templateId, supporterData, photoUrl, sessionId } = generateData;
 
     // Validate required fields
     if (!templateId || !supporterData?.name || !supporterData?.title || !photoUrl || !sessionId) {
@@ -25,8 +25,7 @@ export class PosterController {
         templateId,
         supporterData,
         photoUrl,
-        sessionId,
-        isPhotoPreCropped
+        sessionId
       );
 
       return {

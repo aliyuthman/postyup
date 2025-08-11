@@ -140,42 +140,44 @@ export default function Home() {
       const uploadData = await uploadResponse.json();
       console.log('Photo uploaded successfully:', uploadData.photoUrl);
       
-      // If crop data exists, apply cropping
+      // Use cropped blob if available, otherwise use original photo
       let finalPhotoUrl = uploadData.photoUrl;
       console.log('Photo data:', { 
         hasFile: !!photo.file, 
         hasUrl: !!photo.url, 
         hasCropData: !!photo.cropData,
         hasCroppedAreaPixels: !!photo.croppedAreaPixels,
+        hasCroppedBlob: !!photo.croppedBlob,
         cropData: photo.cropData,
         croppedAreaPixels: photo.croppedAreaPixels
       });
       
-      if (photo.croppedAreaPixels) {
+      if (photo.croppedBlob) {
         setGenerationStep('crop');
-        console.log('Applying crop to photo...', {
-          originalUrl: uploadData.photoUrl,
-          cropParams: photo.croppedAreaPixels
+        console.log('Uploading cropped blob...', {
+          blobSize: photo.croppedBlob.size,
+          blobType: photo.croppedBlob.type
         });
-        const cropResponse = await fetch(`${apiUrl}/api/photo/crop`, {
+        
+        // Upload the cropped blob directly
+        const croppedFormData = new FormData();
+        croppedFormData.append('photo', photo.croppedBlob, `${sessionId}_cropped.jpg`);
+        croppedFormData.append('sessionId', sessionId);
+
+        const croppedUploadResponse = await fetch(`${apiUrl}/api/photo/upload`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            photoUrl: uploadData.photoUrl,
-            cropParams: photo.croppedAreaPixels,
-            sessionId,
-          }),
+          body: croppedFormData,
         });
 
-        if (!cropResponse.ok) {
-          const cropError = await cropResponse.text();
-          console.error('Photo crop failed:', cropError);
-          throw new Error(`Photo crop failed: ${cropResponse.status} - ${cropError}`);
+        if (!croppedUploadResponse.ok) {
+          const cropError = await croppedUploadResponse.text();
+          console.error('Cropped photo upload failed:', cropError);
+          throw new Error(`Cropped photo upload failed: ${croppedUploadResponse.status} - ${cropError}`);
         }
 
-        const cropData = await cropResponse.json();
-        finalPhotoUrl = cropData.croppedPhotoUrl;
-        console.log('Photo cropped successfully:', finalPhotoUrl);
+        const croppedUploadData = await croppedUploadResponse.json();
+        finalPhotoUrl = croppedUploadData.photoUrl;
+        console.log('Cropped photo uploaded successfully:', finalPhotoUrl);
       }
       
       // Now generate the poster with the uploaded photo URL
@@ -189,7 +191,6 @@ export default function Home() {
           supporterData: { name, title },
           photoUrl: finalPhotoUrl,
           sessionId,
-          isPhotoPreCropped: !!photo.croppedAreaPixels,
         }),
       });
 

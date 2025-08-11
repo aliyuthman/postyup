@@ -18,6 +18,7 @@ export interface PhotoData {
     width: number;
     height: number;
   };
+  croppedBlob?: Blob;
 }
 
 export interface SupporterState {
@@ -28,6 +29,7 @@ export interface SupporterState {
   setTitle: (title: string) => void;
   setPhoto: (photo: PhotoData) => void;
   setCropData: (cropData: CropData, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => void;
+  setCroppedBlob: (croppedBlob: Blob) => void;
   reset: () => void;
 }
 
@@ -50,6 +52,13 @@ export const useSupporterStore = create<SupporterState>()(
             ...state.photo,
             cropData,
             croppedAreaPixels,
+          },
+        })),
+      setCroppedBlob: (croppedBlob) =>
+        set((state) => ({
+          photo: {
+            ...state.photo,
+            croppedBlob,
           },
         })),
       reset: () => set(initialState),

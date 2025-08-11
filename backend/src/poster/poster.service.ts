@@ -17,8 +17,7 @@ export class PosterService {
     templateId: string,
     supporterData: { name: string; title: string },
     photoUrl: string,
-    sessionId: string,
-    isPhotoPreCropped = false
+    sessionId: string
   ): Promise<{ previewUrl: string; finalUrl: string }> {
     try {
       const template = await this.templateService.getTemplateById(templateId);
@@ -31,15 +30,13 @@ export class PosterService {
         template,
         supporterData,
         photoUrl,
-        540,
-        isPhotoPreCropped
+        540
       );
       const finalBuffer = await this.composePoster(
         template,
         supporterData,
         photoUrl,
-        2000,
-        isPhotoPreCropped
+        2000
       );
 
       // Upload preview version
@@ -94,8 +91,7 @@ export class PosterService {
     template: any,
     supporterData: { name: string; title: string },
     photoUrl: string,
-    size: number,
-    isPhotoPreCropped = false
+    size: number
   ): Promise<Buffer> {
     try {
       // Download template image
@@ -122,25 +118,16 @@ export class PosterService {
         const photoWidth = Math.round((photoZone.width / 2000) * size);
         const photoHeight = Math.round((photoZone.height / 2000) * size);
 
-        // Process photo - use different resize strategy based on whether it's pre-cropped
+        // Process photo - resize to fit the photo zone exactly (like text positioning)
         console.log('Processing photo for poster:', {
           photoUrl,
-          isPhotoPreCropped,
           photoZone: { x: photoZone.x, y: photoZone.y, width: photoZone.width, height: photoZone.height },
           scaledDimensions: { photoX, photoY, photoWidth, photoHeight }
         });
         
-        let processedPhoto = sharp(Buffer.from(photoBuffer));
-        
-        if (isPhotoPreCropped) {
-          // For pre-cropped photos, just resize to fit the photo zone exactly without cropping
-          console.log('Using pre-cropped photo - applying fill resize');
-          processedPhoto = processedPhoto.resize(photoWidth, photoHeight, { fit: 'fill' });
-        } else {
-          // For original photos, use cover to crop/fill the area
-          console.log('Using original photo - applying cover resize');
-          processedPhoto = processedPhoto.resize(photoWidth, photoHeight, { fit: 'cover' });
-        }
+        // Resize photo to fit exactly in the photo zone (cropping should be done client-side)
+        let processedPhoto = sharp(Buffer.from(photoBuffer))
+          .resize(photoWidth, photoHeight, { fit: 'fill' });
 
         // Apply border radius if specified
         if (photoZone.borderRadius) {

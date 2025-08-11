@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { useSupporterStore } from '@/stores/supporterStore';
+import { getCroppedImg } from '@/utils/cropImage';
 
 interface PhotoCropperProps {
   imageSrc: string;
@@ -14,7 +15,7 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { setCropData } = useSupporterStore();
+  const { setCropData, setCroppedBlob } = useSupporterStore();
 
   const onCropChange = useCallback((crop: { x: number; y: number }) => {
     setCrop(crop);
@@ -29,19 +30,30 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
   }, []);
 
   const onCropCompleteHandler = useCallback(
-    (croppedArea: { x: number; y: number; width: number; height: number }, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => {
+    async (croppedArea: { x: number; y: number; width: number; height: number }, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => {
       console.log('Crop completed:', { croppedArea, croppedAreaPixels });
-      setCropData(
-        {
-          x: croppedArea.x,
-          y: croppedArea.y,
-          width: croppedArea.width,
-          height: croppedArea.height,
-        },
-        croppedAreaPixels
-      );
+      
+      try {
+        // Create cropped blob
+        const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+        console.log('Created cropped blob:', croppedBlob);
+        
+        // Store both crop data and the blob
+        setCropData(
+          {
+            x: croppedArea.x,
+            y: croppedArea.y,
+            width: croppedArea.width,
+            height: croppedArea.height,
+          },
+          croppedAreaPixels
+        );
+        setCroppedBlob(croppedBlob);
+      } catch (error) {
+        console.error('Failed to create cropped blob:', error);
+      }
     },
-    [setCropData]
+    [imageSrc, setCropData, setCroppedBlob]
   );
 
   return (

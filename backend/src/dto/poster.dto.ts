@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUUID, ValidateNested, IsObject, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID, ValidateNested, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -37,9 +37,4 @@ export class GeneratePosterDto {
   @IsString()
   @IsUUID()
   sessionId: string;
-
-  @ApiProperty({ description: 'Whether the photo is already cropped', required: false })
-  @IsOptional()
-  @IsBoolean()
-  isPhotoPreCropped?: boolean;
 }
