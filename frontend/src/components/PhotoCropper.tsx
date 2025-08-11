@@ -30,17 +30,18 @@ export default function PhotoCropper({ imageSrc, onCropComplete }: PhotoCropperP
 
   const onCropCompleteHandler = useCallback(
     (croppedArea: { x: number; y: number; width: number; height: number }, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => {
+      console.log('Crop completed:', { croppedArea, croppedAreaPixels });
       setCropData(
         {
-          x: crop.x,
-          y: crop.y,
+          x: croppedArea.x,
+          y: croppedArea.y,
           width: croppedArea.width,
           height: croppedArea.height,
         },
         croppedAreaPixels
       );
     },
-    [crop, setCropData]
+    [setCropData]
   );
 
   return (
